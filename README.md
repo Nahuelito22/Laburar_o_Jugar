@@ -1,6 +1,7 @@
 # Laburar o Jugar? - Proyecto para Programación 2
 
-Este repositorio contiene el proyecto final para la materia Programación 2, dictada por el profesor Pietrobon.C. El objetivo es desarrollar un videojuego 2D aplicando conceptos de Programación Orientada a Objetos y patrones de diseño.
+Este repositorio contiene el Trabajo Práctico Nº3 para la materia Programación 2, dictada por el profesor Pietrobon.C. 
+El objetivo es desarrollar un videojuego 2D aplicando conceptos de Programación Orientada a Objetos y patrones de diseño.
 
 ## 🎮 Descripción del Juego
 Laburar o Jugar? es un videojuego 2D que combina un "hub world" (mundo central) con múltiples mini-juegos de estilo arcade.
