@@ -1,0 +1,13 @@
+altgraph==0.17.4
+numpy==2.2.6
+opencv-python==4.12.0.88
+packaging==25.0
+pefile==2023.2.7
+pygame==2.6.1
+pygame-ce==2.5.5
+pygame_gui==0.6.14
+pyinstaller==6.14.2
+pyinstaller-hooks-contrib==2025.7
+python-i18n==0.3.9
+pywin32-ctypes==0.2.3
+setuptools==80.9.0
