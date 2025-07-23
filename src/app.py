@@ -1,31 +1,29 @@
 # src/app.py
-
 import pygame
 from . import settings
-# Eliminamos la importación de MenuState por ahora y añadimos HubState
+from .states.intro_state import IntroState
 from .states.hub_state import HubState
 
 class App:
     def __init__(self):
         pygame.init()
+        pygame.mixer.init() # Inicializamos el mezclador de sonido
         self.screen = pygame.display.set_mode(settings.SCREEN_SIZE)
         pygame.display.set_caption("Laburar o Jugar?")
         self.clock = pygame.time.Clock()
-        
+
         self.state_dict = {
-            # 'MENU': MenuState(), # Dejamos comentado MenuState por ahora
-            'HUB': HubState(),    # <-- MODIFICACIÓN: Añadimos el nuevo estado
+            'INTRO': IntroState(),
+            'HUB': HubState(),
         }
-        self.state_name = 'HUB'   # <-- MODIFICACIÓN: Hacemos que el juego inicie en el HUB
+        self.state_name = 'INTRO'
         self.current_state = self.state_dict[self.state_name]
-        # <-- MODIFICACIÓN: Llamamos a startup() para el estado inicial
-        self.current_state.startup({}) 
+        self.current_state.startup({})
 
     def run(self):
-        # El bucle principal no cambia
         while not self.current_state.quit:
             dt = self.clock.tick(settings.FPS) / 1000.0
-            
+
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.current_state.quit = True
@@ -41,12 +39,8 @@ class App:
         pygame.quit()
 
     def flip_state(self):
-        """Función para cambiar de un estado a otro."""
         previous_state_name = self.state_name
         self.state_name = self.current_state.next_state
         persistent_data = self.current_state.persistent
-        
-        # Obtenemos el nuevo estado del diccionario
         self.current_state = self.state_dict[self.state_name]
-        # Le pasamos los datos persistentes del estado anterior
         self.current_state.startup(persistent_data)
