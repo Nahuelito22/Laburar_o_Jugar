@@ -55,8 +55,8 @@ class HubState(BaseState):
         # Comprobamos colisiones con las zonas
         if self.player_rect.colliderect(self.work_zone):
             print("TRANSICIÓN: Paperboy")
-            # self.next_state = "PAPERBOY"
-            #self.done = True
+            self.next_state = "PAPERBOY"
+            self.done = True
             
         if self.player_rect.colliderect(self.play_zone):
             print("TRANSICIÓN: Arcade")

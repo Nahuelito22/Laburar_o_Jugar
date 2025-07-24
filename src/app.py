@@ -3,6 +3,7 @@ import pygame
 from . import settings
 from .states.intro_state import IntroState
 from .states.hub_state import HubState
+from .games.paperboy.paperboy_state import PaperboyState
 
 class App:
     def __init__(self):
@@ -15,6 +16,7 @@ class App:
         self.state_dict = {
             'INTRO': IntroState(),
             'HUB': HubState(),
+            'PAPERBOY': PaperboyState(),
         }
         self.state_name = 'INTRO'
         self.current_state = self.state_dict[self.state_name]
