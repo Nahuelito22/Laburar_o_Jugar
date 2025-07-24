@@ -2,40 +2,32 @@
 import pygame
 from ...states.base_state import BaseState
 from ... import settings
-from ...components.scrolling_background import ScrollingBackground
-from .entities import PlayerBike
 
 class PaperboyState(BaseState):
     def __init__(self):
         super().__init__()
         self.next_state = "HUB"
-        
-        # ---- CAMBIO PRINCIPAL AQUÍ ----
-        # Ya no necesitamos una lista de imágenes.
-        # Le pasamos la ruta de nuestra única imagen "tira larga".
-        # Asegúrate de que el nombre del archivo sea el correcto.
-        self.background = ScrollingBackground(
-            image_path="assets/images/paperboy_level_strip.png", 
-            speed=300
-        )
-
-        # El resto del código para el jugador no cambia
-        self.all_sprites = pygame.sprite.Group()
-        self.player = PlayerBike()
-        self.all_sprites.add(self.player)
 
     def get_event(self, event):
         if event.type == pygame.QUIT:
             self.quit = True
+        # Si se presiona ESCAPE, volvemos al Hub
         if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
             self.done = True
 
     def update(self, dt):
-        # Actualizamos el fondo y todos los sprites (incluido el jugador)
-        self.background.update(dt)
-        self.all_sprites.update(dt) # Pasamos 'dt' para el movimiento
+        # No hay nada que actualizar por ahora
+        pass
 
     def draw(self, surface):
-        # Dibujamos el fondo primero y luego los sprites
-        self.background.draw(surface)
-        self.all_sprites.draw(surface)
+        # Simplemente dibujamos un fondo negro y un texto de marcador
+        surface.fill(settings.BLACK)
+        font = pygame.font.Font(None, 50)
+        
+        text = font.render("Paperboy (Top-Down) - En Construccion", True, settings.WHITE)
+        text_rect = text.get_rect(center=(settings.SCREEN_WIDTH / 2, settings.SCREEN_HEIGHT / 2))
+        surface.blit(text, text_rect)
+        
+        esc_text = font.render("Presiona ESC para volver al Hub", True, settings.WHITE)
+        esc_rect = esc_text.get_rect(center=(settings.SCREEN_WIDTH / 2, settings.SCREEN_HEIGHT / 2 + 60))
+        surface.blit(esc_text, esc_rect)
