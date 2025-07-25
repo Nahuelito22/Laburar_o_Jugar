@@ -4,6 +4,7 @@ from . import settings
 from .states.intro_state import IntroState
 from .states.hub_state import HubState
 from .games.paperboy.paperboy_state import PaperboyState
+from .states.game_over_state import GameOverState
 
 class App:
     def __init__(self):
@@ -17,6 +18,7 @@ class App:
             'INTRO': IntroState(),
             'HUB': HubState(),
             'PAPERBOY': PaperboyState(),
+            'GAME_OVER': GameOverState(),
         }
         self.state_name = 'INTRO'
         self.current_state = self.state_dict[self.state_name]
