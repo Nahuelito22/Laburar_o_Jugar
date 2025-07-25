@@ -19,22 +19,21 @@ class PlayerPaperboy(pygame.sprite.Sprite):
             'ride': self.cargar_animacion("assets/images/Paperboy_ride.png"),
             'spin_left': self.cargar_animacion("assets/images/Paperboy_spin_left.png"),
             'spin_right': self.cargar_animacion("assets/images/Paperboy_spin_right.png"),
-            'throw_left': self.cargar_animacion("assets/images/Paperboy_throw_left.png", False), # False = no se repite
-            'throw_right': self.cargar_animacion("assets/images/Paperboy_throw_right.png", False) # False = no se repite
+            'throw_left': self.cargar_animacion("assets/images/Paperboy_throw_left.png", False),
+            'throw_right': self.cargar_animacion("assets/images/Paperboy_throw_right.png", False)
         }
         self.estado_animacion = 'ride'
         self.current_frame = 0
         self.last_update = pygame.time.get_ticks()
         self.animation_speed = 120
-        
         self.image = self.animations[self.estado_animacion]['frames'][self.current_frame]
-        
         self.rect = self.image.get_rect(centerx=settings.SCREEN_WIDTH / 2, bottom=settings.SCREEN_HEIGHT - 50)
         self.speed = 350
         self.limite_izquierdo = 300
         self.limite_derecho = 950
 
     def cargar_animacion(self, spritesheet_path, loop=True):
+        # ... (este método no cambia) ...
         spritesheet = SpriteSheet(spritesheet_path)
         frames = []
         num_frames = spritesheet.sheet.get_height() // PLAYER_FRAME_HEIGHT
@@ -44,26 +43,31 @@ class PlayerPaperboy(pygame.sprite.Sprite):
         return {'frames': frames, 'loop': loop}
 
     def update(self, dt):
-        # Lógica de animación
+        # --- LÓGICA DE ANIMACIÓN Y ESTADO REESTRUCTURADA ---
+        
+        # 1. Actualizamos la animación actual
         now = pygame.time.get_ticks()
         if now - self.last_update > self.animation_speed:
             self.last_update = now
             self.current_frame += 1
             anim_info = self.animations[self.estado_animacion]
             
+            # Si la animación actual termina
             if self.current_frame >= len(anim_info['frames']):
                 if anim_info['loop']:
-                    self.current_frame = 0
+                    self.current_frame = 0 # La reiniciamos si es un bucle
                 else:
-                    self.estado_animacion = 'ride'
+                    self.estado_animacion = 'ride' # Si no, volvemos a pedalear
                     self.current_frame = 0
             
             self.image = self.animations[self.estado_animacion]['frames'][self.current_frame]
 
-        # Lógica de movimiento
-        keys = pygame.key.get_pressed()
-        nuevo_estado = 'ride'
-        if not (self.estado_animacion == 'throw_left' or self.estado_animacion == 'throw_right'):
+        # 2. Manejamos el movimiento y el cambio de estado (si no estamos lanzando)
+        is_throwing = 'throw' in self.estado_animacion
+        if not is_throwing:
+            keys = pygame.key.get_pressed()
+            nuevo_estado = 'ride'
+            
             if keys[pygame.K_LEFT] or keys[pygame.K_a]:
                 self.rect.x -= self.speed * dt
                 nuevo_estado = 'spin_left'
@@ -71,23 +75,27 @@ class PlayerPaperboy(pygame.sprite.Sprite):
                 self.rect.x += self.speed * dt
                 nuevo_estado = 'spin_right'
             
+            # Solo cambiamos a la animación de giro si es necesario
             if nuevo_estado != self.estado_animacion:
                 self.estado_animacion = nuevo_estado
                 self.current_frame = 0
-
+        
+        # El movimiento vertical siempre es posible
+        keys = pygame.key.get_pressed()
         if keys[pygame.K_UP] or keys[pygame.K_w]:
             self.rect.y -= self.speed * dt
         if keys[pygame.K_DOWN] or keys[pygame.K_s]:
             self.rect.y += self.speed * dt
 
-        # Límites
+        # Límites (sin cambios)
         if self.rect.left < self.limite_izquierdo: self.rect.left = self.limite_izquierdo
         if self.rect.right > self.limite_derecho: self.rect.right = self.limite_derecho
         if self.rect.top < 0: self.rect.top = 0
         if self.rect.bottom > settings.SCREEN_HEIGHT: self.rect.bottom = settings.SCREEN_HEIGHT
 
     def lanzar(self, estado):
-        if not (self.estado_animacion == 'throw_left' or self.estado_animacion == 'throw_right'):
+        is_throwing = 'throw' in self.estado_animacion
+        if not is_throwing: # Solo permite lanzar si no está lanzando ya
             self.estado_animacion = estado
             self.current_frame = 0
 
