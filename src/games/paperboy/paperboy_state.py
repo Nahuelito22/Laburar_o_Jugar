@@ -12,7 +12,8 @@ class PaperboyState(BaseState):
         self.next_state = "HUB"
         
         # 1. Creamos el fondo con tus 8 imágenes de barrio
-        bg_paths = [f"assets/images/barrio_{i}.png" for i in range(1, 9)] # Asume nombres como Barrio_1.png, Barrio_2.png, etc.
+        # ¡Ojo! Asegurate que tus archivos se llamen "barrio_1.png", "barrio_2.png", etc.
+        bg_paths = [f"assets/images/barrio_{i}.png" for i in range(1, 9)] 
         self.background = ScrollingBackground(image_paths=bg_paths, speed=300)
 
         # 2. Creamos los grupos de sprites y al jugador
@@ -33,3 +34,14 @@ class PaperboyState(BaseState):
     def draw(self, surface):
         self.background.draw(surface)
         self.all_sprites.draw(surface)
+        
+        # --- NUEVO: Dibujamos las ayudas visuales si el modo debug está activado ---
+        if settings.DEBUG_MODE:
+            # Línea del límite izquierdo (Roja)
+            pygame.draw.line(surface, (255, 0, 0), 
+                             (self.player.limite_izquierdo, 0), 
+                             (self.player.limite_izquierdo, settings.SCREEN_HEIGHT), 2)
+            # Línea del límite derecho (Roja)
+            pygame.draw.line(surface, (255, 0, 0), 
+                             (self.player.limite_derecho, 0), 
+                             (self.player.limite_derecho, settings.SCREEN_HEIGHT), 2)

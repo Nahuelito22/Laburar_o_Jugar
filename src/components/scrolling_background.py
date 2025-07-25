@@ -28,5 +28,6 @@ class ScrollingBackground:
             self.bg2_img = random.choice(self.images)
 
     def draw(self, surface):
-        surface.blit(self.bg1_img, self.bg2_rect)
-        surface.blit(self.bg2_img, self.bg1_rect)
+        # La versión 100% correcta:
+        surface.blit(self.bg1_img, self.bg1_rect)
+        surface.blit(self.bg2_img, self.bg2_rect)

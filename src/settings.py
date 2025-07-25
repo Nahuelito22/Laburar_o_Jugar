@@ -12,3 +12,5 @@ FPS = 60
 # Colores (en formato RGB)
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
+
+DEBUG_MODE = True
