@@ -12,35 +12,37 @@ class PaperboyState(BaseState):
         self.next_state = "HUB"
         self.background = ScrollingBackground(image_path="assets/images/paperboy_level_strip.png", speed=300)
         
-        # --- Grupos de Sprites (sin cambios) ---
         self.all_sprites = pygame.sprite.Group()
         self.obstacles = pygame.sprite.Group()
         self.targets = pygame.sprite.Group()
         self.projectiles = pygame.sprite.Group()
 
-        # --- Creamos al jugador (sin cambios) ---
         self.player = PlayerPaperboy()
         self.all_sprites.add(self.player)
         
-        # --- Variables de juego (sin cambios) ---
         self.score = 0
         self.periodicos_restantes = 10
 
-        # --- Sistema de Spawning (sin cambios) ---
+        # --- NUEVO: Límites para los buzones ---
+        # Ajustá estos valores para que coincidan con tus veredas
+        self.buzon_limite_izq = 450
+        self.buzon_limite_der = 860
+
         self.SPAWN_BUZON_EVENT = pygame.USEREVENT + 1
         pygame.time.set_timer(self.SPAWN_BUZON_EVENT, 2500)
         self.SPAWN_AUTO_EVENT = pygame.USEREVENT + 2
         pygame.time.set_timer(self.SPAWN_AUTO_EVENT, 3500)
 
     def get_event(self, event):
-        # --- (sin cambios en este método) ---
         if event.type == pygame.QUIT:
             self.quit = True
         if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
             self.done = True
         
+        # --- Manejo de Spawning ACTUALIZADO ---
         if event.type == self.SPAWN_BUZON_EVENT:
-            buzon = Buzon(self.background.speed_y)
+            # Le pasamos los nuevos límites al Buzon
+            buzon = Buzon(self.background.speed_y, self.buzon_limite_izq, self.buzon_limite_der)
             self.all_sprites.add(buzon)
             self.targets.add(buzon)
 
@@ -64,7 +66,7 @@ class PaperboyState(BaseState):
         self.background.update(dt)
         self.all_sprites.update(dt)
 
-        # Lógica de Puntuación (sin cambios)
+        # Lógica de Puntuación
         hits = pygame.sprite.groupcollide(self.projectiles, self.targets, True, True)
         if hits:
             self.score += 10
@@ -77,21 +79,16 @@ class PaperboyState(BaseState):
                 print(f"Buzón perdido! Puntaje: {self.score}")
                 buzon.kill()
 
-        # --- Lógica de Derrota y Colisión ACTUALIZADA ---
-
-        # 1. Lista de obstáculos activos (sin cambios)
+        # Lógica de Derrota y Colisión
         obstaculos_activos = [obs for obs in self.obstacles if hasattr(obs, 'is_active') and obs.is_active]
         
-        # 2. Comprobamos colisión usando los HITBOX
         for obs in obstaculos_activos:
-            # Usamos el hitbox tanto del jugador como del obstáculo
             if self.player.hitbox.colliderect(obs.hitbox):
                 print("¡CHOQUE! Fin del juego.")
                 self.done = True
                 self.next_state = "GAME_OVER"
-                break # Salimos del bucle para no procesar más choques
+                break
 
-        # 3. Comprobamos si se quedó sin periódicos (sin cambios)
         if self.periodicos_restantes <= 0 and not self.projectiles:
             print("¡Sin periódicos! Fin del juego.")
             self.done = True
@@ -101,20 +98,24 @@ class PaperboyState(BaseState):
         self.background.draw(surface)
         self.all_sprites.draw(surface)
         
-        # HUD (sin cambios)
+        # HUD
         font = pygame.font.Font(None, 50)
         score_text = font.render(f"Puntaje: {self.score}", True, settings.WHITE)
         ammo_text = font.render(f"Periodicos: {self.periodicos_restantes}", True, settings.WHITE)
         surface.blit(score_text, (10, 10))
         surface.blit(ammo_text, (10, 50))
 
-        # --- Lógica de DEBUG ACTUALIZADA ---
+        # --- DEBUG ACTUALIZADO ---
         if settings.DEBUG_MODE:
-            # Dibujamos los límites de la calle (rojo)
+            # Límites del jugador (Rojo)
             pygame.draw.line(surface, (255, 0, 0), (self.player.limite_izquierdo, 0), (self.player.limite_izquierdo, settings.SCREEN_HEIGHT), 2)
             pygame.draw.line(surface, (255, 0, 0), (self.player.limite_derecho, 0), (self.player.limite_derecho, settings.SCREEN_HEIGHT), 2)
             
-            # Dibujamos el hitbox de todos los sprites (verde)
+            # Límites de los buzones (Azul)
+            pygame.draw.line(surface, (0, 0, 255), (self.buzon_limite_izq, 0), (self.buzon_limite_izq, settings.SCREEN_HEIGHT), 2)
+            pygame.draw.line(surface, (0, 0, 255), (self.buzon_limite_der, 0), (self.buzon_limite_der, settings.SCREEN_HEIGHT), 2)
+
+            # Hitbox de todos los sprites (Verde)
             for sprite in self.all_sprites:
                 if hasattr(sprite, 'hitbox'):
                     pygame.draw.rect(surface, (0, 255, 0), sprite.hitbox, 2)

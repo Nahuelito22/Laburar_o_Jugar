@@ -29,8 +29,8 @@ class PlayerPaperboy(pygame.sprite.Sprite):
         self.image = self.animations[self.estado_animacion]['frames'][self.current_frame]
         self.rect = self.image.get_rect(centerx=settings.SCREEN_WIDTH / 2, bottom=settings.SCREEN_HEIGHT - 50)
         self.speed = 350
-        self.limite_izquierdo = 300
-        self.limite_derecho = 950
+        self.limite_izquierdo = 450
+        self.limite_derecho = 860
         
         # --- NUEVO: Hitbox para el jugador ---
         # Hacemos el hitbox un 60% más pequeño que la imagen
@@ -45,7 +45,7 @@ class PlayerPaperboy(pygame.sprite.Sprite):
         return {'frames': frames, 'loop': loop}
 
     def update(self, dt):
-        # ... (lógica de animación sin cambios) ...
+        # ... (La lógica de animación no cambia) ...
         now = pygame.time.get_ticks()
         if now - self.last_update > self.animation_speed:
             self.last_update = now
@@ -59,7 +59,7 @@ class PlayerPaperboy(pygame.sprite.Sprite):
                     self.current_frame = 0
             self.image = self.animations[self.estado_animacion]['frames'][self.current_frame]
 
-        # Lógica de movimiento
+        # --- LÓGICA DE MOVIMIENTO ACTUALIZADA ---
         is_throwing = 'throw' in self.estado_animacion
         if not is_throwing:
             keys = pygame.key.get_pressed()
@@ -79,14 +79,23 @@ class PlayerPaperboy(pygame.sprite.Sprite):
             self.rect.y -= self.speed * dt
         if keys[pygame.K_DOWN] or keys[pygame.K_s]:
             self.rect.y += self.speed * dt
+        
+        # Primero actualizamos la posición del hitbox para que siga a la imagen
+        self.hitbox.center = self.rect.center
 
-        # Límites
-        if self.rect.left < self.limite_izquierdo: self.rect.left = self.limite_izquierdo
-        if self.rect.right > self.limite_derecho: self.rect.right = self.limite_derecho
+        # --- LÍMITES CORREGIDOS (AHORA USAN EL HITBOX) ---
+        if self.hitbox.left < self.limite_izquierdo:
+            self.hitbox.left = self.limite_izquierdo
+            self.rect.centerx = self.hitbox.centerx # Re-alineamos la imagen
+        if self.hitbox.right > self.limite_derecho:
+            self.hitbox.right = self.limite_derecho
+            self.rect.centerx = self.hitbox.centerx # Re-alineamos la imagen
+
+        # Límites verticales
         if self.rect.top < 0: self.rect.top = 0
         if self.rect.bottom > settings.SCREEN_HEIGHT: self.rect.bottom = settings.SCREEN_HEIGHT
-
-        # --- NUEVO: Mantenemos el hitbox centrado con el rect principal ---
+        
+        # Volvemos a centrar el hitbox por si el movimiento vertical lo desalineó
         self.hitbox.center = self.rect.center
 
     def lanzar(self, estado):
@@ -96,18 +105,23 @@ class PlayerPaperboy(pygame.sprite.Sprite):
             self.current_frame = 0
 
 class Buzon(pygame.sprite.Sprite):
-    def __init__(self, scroll_speed):
+    def __init__(self, scroll_speed, limite_izq_buzon, limite_der_buzon): # <-- Acepta sus propios límites
         super().__init__()
         colores = ["blue", "green", "red", "yellow"]
         lado = random.choice(["izquierda", "derecha"])
+        
         img_path = f"assets/images/mailbox_{random.choice(colores)}.png"
         self.image = pygame.image.load(img_path).convert_alpha()
         self.image = pygame.transform.scale(self.image, (BUZON_WIDTH, BUZON_HEIGHT))
+        
         if lado == "izquierda":
             self.image = pygame.transform.flip(self.image, True, False)
-            x = random.randint(150, 250)
-        else:
-            x = random.randint(1000, 1100)
+            # Usa el límite de buzón para posicionarse
+            x = random.randint(limite_izq_buzon - 80, limite_izq_buzon - 20)
+        else: # derecha
+            # Usa el límite de buzón para posicionarse
+            x = random.randint(limite_der_buzon + 20, limite_der_buzon + 80)
+            
         y = random.randint(-200, -100)
         self.rect = self.image.get_rect(center=(x, y))
         self.scroll_speed = scroll_speed
