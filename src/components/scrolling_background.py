@@ -1,33 +1,23 @@
 # src/components/scrolling_background.py
 import pygame
-import random
 from .. import settings
 
 class ScrollingBackground:
-    def __init__(self, image_paths, speed): # Acepta 'image_paths' (plural)
-        self.images = [pygame.image.load(path).convert() for path in image_paths]
-
-        self.bg1_img = random.choice(self.images)
-        self.bg2_img = random.choice(self.images)
-
-        self.bg1_rect = self.bg1_img.get_rect(topleft=(0, 0))
-        self.bg2_rect = self.bg2_img.get_rect(topleft=(0, -settings.SCREEN_HEIGHT))
-
-        self.speed = speed
+    def __init__(self, image_path, speed):
+        self.image = pygame.image.load(image_path).convert()
+        self.image_height = self.image.get_height()
+        self.rect1 = self.image.get_rect(topleft=(0, 0))
+        self.rect2 = self.image.get_rect(topleft=(0, -self.image_height))
+        self.speed_y = speed
 
     def update(self, dt):
-        self.bg1_rect.y += self.speed * dt
-        self.bg2_rect.y += self.speed * dt
-
-        if self.bg1_rect.top >= settings.SCREEN_HEIGHT:
-            self.bg1_rect.top = self.bg2_rect.top - settings.SCREEN_HEIGHT
-            self.bg1_img = random.choice(self.images)
-
-        if self.bg2_rect.top >= settings.SCREEN_HEIGHT:
-            self.bg2_rect.top = self.bg1_rect.top - settings.SCREEN_HEIGHT
-            self.bg2_img = random.choice(self.images)
+        self.rect1.y += self.speed_y * dt
+        self.rect2.y += self.speed_y * dt
+        if self.rect1.top >= settings.SCREEN_HEIGHT:
+            self.rect1.y = self.rect2.y - self.image_height
+        if self.rect2.top >= settings.SCREEN_HEIGHT:
+            self.rect2.y = self.rect1.y - self.image_height
 
     def draw(self, surface):
-        # La versión 100% correcta:
-        surface.blit(self.bg1_img, self.bg1_rect)
-        surface.blit(self.bg2_img, self.bg2_rect)
+        surface.blit(self.image, self.rect1)
+        surface.blit(self.image, self.rect2)
