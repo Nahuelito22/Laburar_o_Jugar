@@ -9,7 +9,13 @@ def load_data():
         with open(SAVE_FILE, 'r') as f:
             data = json.load(f)
     except FileNotFoundError:
-        data = {'high_score': 0}
+        # --- NUEVO: Valores por defecto si no hay partida guardada ---
+        data = {
+            'nombre_usuario': 'Jugador',
+            'high_score': 0,
+            'dinero_total': 0,
+            'fichas': 0
+        }
     return data
 
 def save_data(data):

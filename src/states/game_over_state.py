@@ -2,6 +2,7 @@
 import pygame
 from .base_state import BaseState
 from .. import settings
+from .. import save_manager
 
 class GameOverState(BaseState):
     def __init__(self):
