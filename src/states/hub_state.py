@@ -3,7 +3,7 @@ import pygame
 from .base_state import BaseState
 from .. import settings
 from ..entities import PlayerHub # <-- Importamos nuestra nueva clase de jugador
-
+from .. import save_manager  # Importamos el gestor de guardado
 class HubState(BaseState):
     def __init__(self):
         super().__init__()
@@ -33,36 +33,63 @@ class HubState(BaseState):
         self.left_arrow_rect = self.left_arrow.get_rect(centery=settings.SCREEN_HEIGHT / 2, left=40)
         self.right_arrow_rect = self.right_arrow.get_rect(centery=settings.SCREEN_HEIGHT / 2, right=settings.SCREEN_WIDTH - 40)
 
+        # --- NUEVO: Inicializamos las variables de dinero y fichas ---
+        self.dinero_total = 0
+        self.fichas = 0
+        self.hud_font = pygame.font.Font(None, 50)
+
+    def startup(self, persistent):
+        """Se ejecuta al entrar al estado."""
+        super().startup(persistent)
+        
+        # --- LÓGICA ACTUALIZADA ---
+        # Priorizamos los datos pasados del estado anterior (como de GameOver)
+        self.dinero_total = self.persistent.get('dinero_total')
+        self.fichas = self.persistent.get('fichas', 0)
+
+        # Si no se pasó dinero (porque es la primera vez que se abre el juego),
+        # lo cargamos del archivo de guardado.
+        if self.dinero_total is None:
+            save_data = save_manager.load_data()
+            self.dinero_total = save_data.get('dinero_total', 0)
+
     def get_event(self, event):
         if event.type == pygame.QUIT:
             self.quit = True
         
     def update(self, dt):
-        # El grupo de sprites se encarga de llamar al update() del jugador
         self.all_sprites.update(dt)
         
-        # Comprobamos colisiones con las zonas
-        if self.player.rect.colliderect(self.work_zone):
-            print("TRANSICIÓN: Paperboy")
-            self.next_state = "PAPERBOY"
+        # --- LÓGICA DE TRANSICIÓN ACTUALIZADA ---
+        if self.player.hitbox.colliderect(self.work_zone):
+            # Guardamos el dinero y las fichas actuales antes de irnos
+            self.persistent['dinero_total'] = self.dinero_total
+            self.persistent['fichas'] = self.fichas
             self.done = True
+            self.next_state = "PAPERBOY"
             
-        if self.player.rect.colliderect(self.play_zone):
-                print("TRANSICIÓN: Arcade")
-                self.next_state = "ARCADE" # <-- CAMBIADO
-                self.done = True
+        if self.player.hitbox.colliderect(self.play_zone):
+            # Guardamos el dinero y las fichas actuales antes de irnos
+            self.persistent['dinero_total'] = self.dinero_total
+            self.persistent['fichas'] = self.fichas
+            self.done = True
+            self.next_state = "ARCADE"
 
     def draw(self, surface):
-        # 1. SIEMPRE dibujamos el fondo primero. Esto borra la pantalla.
         surface.blit(self.background_image, (0, 0))
-        
-        # 2. El grupo de sprites se encarga de dibujar al jugador encima del fondo.
         self.all_sprites.draw(surface)
         
-        # 3. Finalmente, dibujamos las flechas por encima de todo.
+        # Dibujamos las flechas
         surface.blit(self.left_arrow, self.left_arrow_rect)
         surface.blit(self.right_arrow, self.right_arrow_rect)
         
+        # --- NUEVO: Dibujamos el HUD de dinero y fichas ---
+        dinero_texto = self.hud_font.render(f"Dinero: ${self.dinero_total}", True, settings.WHITE)
+        fichas_texto = self.hud_font.render(f"Fichas: {self.fichas}", True, settings.WHITE)
+        surface.blit(dinero_texto, (10, 10))
+        surface.blit(fichas_texto, (10, 50))
+
         # Opcional: Descomenta para ver las zonas de activación
-        # pygame.draw.rect(surface, (255, 0, 0, 100), self.work_zone)
-        # pygame.draw.rect(surface, (0, 0, 255, 100), self.play_zone)
+        # if settings.DEBUG_MODE:
+        #     pygame.draw.rect(surface, (255, 0, 0), self.work_zone, 2)
+        #     pygame.draw.rect(surface, (0, 0, 255), self.play_zone, 2)
