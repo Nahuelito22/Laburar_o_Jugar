@@ -4,7 +4,7 @@ from . import settings
 # --- CAMBIO: Ahora importamos las CLASES, no creamos las instancias ---
 from .states.intro_state import IntroState
 from .states.hub_state import HubState
-from .states.paperboy.paperboy_state import PaperboyState
+from .games.paperboy.paperboy_state import PaperboyState
 from .states.game_over_state import GameOverState
 
 class App:

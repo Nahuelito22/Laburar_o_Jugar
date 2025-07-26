@@ -32,9 +32,8 @@ class PlayerPaperboy(pygame.sprite.Sprite):
         self.limite_izquierdo = 450
         self.limite_derecho = 860
         
-        # --- NUEVO: Hitbox para el jugador ---
-        # Hacemos el hitbox un 60% más pequeño que la imagen
         self.hitbox = self.rect.inflate(-self.rect.width * 0.75, -self.rect.height * 0.40)
+
     def cargar_animacion(self, spritesheet_path, loop=True):
         spritesheet = SpriteSheet(spritesheet_path)
         frames = []
@@ -45,7 +44,6 @@ class PlayerPaperboy(pygame.sprite.Sprite):
         return {'frames': frames, 'loop': loop}
 
     def update(self, dt):
-        # ... (La lógica de animación no cambia) ...
         now = pygame.time.get_ticks()
         if now - self.last_update > self.animation_speed:
             self.last_update = now
@@ -59,7 +57,6 @@ class PlayerPaperboy(pygame.sprite.Sprite):
                     self.current_frame = 0
             self.image = self.animations[self.estado_animacion]['frames'][self.current_frame]
 
-        # --- LÓGICA DE MOVIMIENTO ACTUALIZADA ---
         is_throwing = 'throw' in self.estado_animacion
         if not is_throwing:
             keys = pygame.key.get_pressed()
@@ -80,22 +77,18 @@ class PlayerPaperboy(pygame.sprite.Sprite):
         if keys[pygame.K_DOWN] or keys[pygame.K_s]:
             self.rect.y += self.speed * dt
         
-        # Primero actualizamos la posición del hitbox para que siga a la imagen
         self.hitbox.center = self.rect.center
 
-        # --- LÍMITES CORREGIDOS (AHORA USAN EL HITBOX) ---
         if self.hitbox.left < self.limite_izquierdo:
             self.hitbox.left = self.limite_izquierdo
-            self.rect.centerx = self.hitbox.centerx # Re-alineamos la imagen
+            self.rect.centerx = self.hitbox.centerx
         if self.hitbox.right > self.limite_derecho:
             self.hitbox.right = self.limite_derecho
-            self.rect.centerx = self.hitbox.centerx # Re-alineamos la imagen
+            self.rect.centerx = self.hitbox.centerx
 
-        # Límites verticales
         if self.rect.top < 0: self.rect.top = 0
         if self.rect.bottom > settings.SCREEN_HEIGHT: self.rect.bottom = settings.SCREEN_HEIGHT
         
-        # Volvemos a centrar el hitbox por si el movimiento vertical lo desalineó
         self.hitbox.center = self.rect.center
 
     def lanzar(self, estado):
@@ -105,7 +98,7 @@ class PlayerPaperboy(pygame.sprite.Sprite):
             self.current_frame = 0
 
 class Buzon(pygame.sprite.Sprite):
-    def __init__(self, scroll_speed, limite_izq_buzon, limite_der_buzon): # <-- Acepta sus propios límites
+    def __init__(self, scroll_speed, limite_izq_buzon, limite_der_buzon):
         super().__init__()
         colores = ["blue", "green", "red", "yellow"]
         lado = random.choice(["izquierda", "derecha"])
@@ -116,10 +109,8 @@ class Buzon(pygame.sprite.Sprite):
         
         if lado == "izquierda":
             self.image = pygame.transform.flip(self.image, True, False)
-            # Usa el límite de buzón para posicionarse
             x = random.randint(limite_izq_buzon - 80, limite_izq_buzon - 20)
-        else: # derecha
-            # Usa el límite de buzón para posicionarse
+        else:
             x = random.randint(limite_der_buzon + 20, limite_der_buzon + 80)
             
         y = random.randint(-200, -100)
@@ -128,10 +119,8 @@ class Buzon(pygame.sprite.Sprite):
 
     def update(self, dt):
         self.rect.y += self.scroll_speed * dt
-        if self.rect.top > settings.SCREEN_HEIGHT:
-            self.kill()
+        # La eliminación ahora la maneja el state para la penalización
 
-# --- CLASE 'AUTO' ACTUALIZADA CON HITBOX ---
 class Auto(pygame.sprite.Sprite):
     def __init__(self, scroll_speed):
         super().__init__()
@@ -159,8 +148,6 @@ class Auto(pygame.sprite.Sprite):
         self.image = self.animation_frames[self.current_frame]
         
         self.rect = self.image.get_rect()
-        
-        # --- NUEVO: Creamos un hitbox más pequeño ---
         self.hitbox = self.rect.inflate(-self.rect.width * 0.7, -self.rect.height * 0.3)
         
         x = random.randint(350, 900)
@@ -173,16 +160,14 @@ class Auto(pygame.sprite.Sprite):
         self.is_active = False
 
     def update(self, dt):
-        # Animación
         now = pygame.time.get_ticks()
         if now - self.last_update > self.animation_speed:
             self.last_update = now
             self.current_frame = (self.current_frame + 1) % len(self.animation_frames)
             self.image = self.animation_frames[self.current_frame]
 
-        # Movimiento
         self.rect.y += (self.scroll_speed + self.speed_propia) * dt
-        self.hitbox.center = self.rect.center # Mantenemos el hitbox centrado con la imagen
+        self.hitbox.center = self.rect.center
 
         if not self.is_active and self.rect.top > 0:
             self.is_active = True
@@ -195,6 +180,10 @@ class Periodico(pygame.sprite.Sprite):
         self.image = pygame.image.load("assets/images/periodico.png").convert_alpha()
         self.image = pygame.transform.scale(self.image, (32, 32))
         self.rect = self.image.get_rect(center=start_pos)
+        
+        # --- NUEVO: Bandera para saber si acertó ---
+        self.acerto = False
+        
         self.scroll_speed = scroll_speed
         self.speed = 600
         
@@ -208,5 +197,4 @@ class Periodico(pygame.sprite.Sprite):
     def update(self, dt):
         self.rect.x += self.vel_x * dt
         self.rect.y += self.vel_y * dt + self.scroll_speed * dt
-        if not pygame.Rect(-50, -50, settings.SCREEN_WIDTH + 100, settings.SCREEN_HEIGHT + 100).colliderect(self.rect):
-            self.kill()
+        # La eliminación ahora la maneja el state para la penalización

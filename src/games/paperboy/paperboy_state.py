@@ -5,7 +5,7 @@ from ...states.base_state import BaseState
 from ... import settings
 from ...components.scrolling_background import ScrollingBackground
 from .entities import PlayerPaperboy, Buzon, Auto, Periodico
-from ... import save_manager # <-- Importamos el gestor de guardado
+from ... import save_manager
 
 class PaperboyState(BaseState):
     def __init__(self):
@@ -63,39 +63,46 @@ class PaperboyState(BaseState):
         self.background.update(dt)
         self.all_sprites.update(dt)
 
-        # Lógica de Puntuación
-        hits = pygame.sprite.groupcollide(self.projectiles, self.targets, True, True)
-        if hits:
-            self.score += 10
-            self.periodicos_restantes += 2
+        # Lógica de Puntuación y Penalización
+        hits = pygame.sprite.groupcollide(self.projectiles, self.targets, False, True)
+        for periodico, buzones_golpeados in hits.items():
+            if not periodico.acerto:
+                self.score += 10
+                self.periodicos_restantes += 2
+                periodico.acerto = True
+                periodico.kill()
 
         for buzon in list(self.targets):
             if buzon.rect.top > settings.SCREEN_HEIGHT:
                 self.score -= 5
                 buzon.kill()
+        
+        # --- LÍNEA CORREGIDA AQUÍ ---
+        screen_rect = pygame.Rect(0, 0, settings.SCREEN_WIDTH, settings.SCREEN_HEIGHT)
+        for periodico in list(self.projectiles):
+            # Si un periódico sale de la pantalla...
+            if not screen_rect.colliderect(periodico.rect):
+                # ... y no había acertado a nada...
+                if not periodico.acerto:
+                    self.score -= 1
+                periodico.kill() # Lo eliminamos
 
-        # --- Lógica de Derrota y Guardado ---
+        # Lógica de Derrota y Guardado (sin cambios)
         lost = False
         obstaculos_activos = [obs for obs in self.obstacles if hasattr(obs, 'is_active') and obs.is_active]
-        
         if self.player.hitbox.collidelist([obs.hitbox for obs in obstaculos_activos]) != -1:
-            print("¡CHOQUE! Fin del juego.")
             lost = True
-        
         if self.periodicos_restantes <= 0 and not self.projectiles:
-            print("¡Sin periódicos! Fin del juego.")
             lost = True
 
         if lost:
-            # Cargamos los datos guardados
             save_data = save_manager.load_data()
-            # Actualizamos el récord si es necesario
+            dinero_total_anterior = save_data.get('dinero_total', 0)
+            save_data['dinero_total'] = dinero_total_anterior + self.score
             if self.score > save_data.get('high_score', 0):
                 save_data['high_score'] = self.score
-            # Guardamos
             save_manager.save_data(save_data)
             
-            # Pasamos el puntaje final a la pantalla de Game Over
             self.persistent['last_score'] = self.score
             self.done = True
             self.next_state = "GAME_OVER"
@@ -106,17 +113,22 @@ class PaperboyState(BaseState):
         
         # HUD
         font = pygame.font.Font(None, 50)
-        score_text = font.render(f"Puntaje: {self.score}", True, settings.WHITE)
+        score_text = font.render(f"Puntos: {self.score}", True, settings.WHITE)
         ammo_text = font.render(f"Periodicos: {self.periodicos_restantes}", True, settings.WHITE)
         surface.blit(score_text, (10, 10))
         surface.blit(ammo_text, (10, 50))
 
-        # Modo Debug
+        # --- DEBUG COMPLETO ---
         if settings.DEBUG_MODE:
+            # Límites del jugador (Rojo)
             pygame.draw.line(surface, (255, 0, 0), (self.player.limite_izquierdo, 0), (self.player.limite_izquierdo, settings.SCREEN_HEIGHT), 2)
             pygame.draw.line(surface, (255, 0, 0), (self.player.limite_derecho, 0), (self.player.limite_derecho, settings.SCREEN_HEIGHT), 2)
+            
+            # Límites de los buzones (Azul)
             pygame.draw.line(surface, (0, 0, 255), (self.buzon_limite_izq, 0), (self.buzon_limite_izq, settings.SCREEN_HEIGHT), 2)
             pygame.draw.line(surface, (0, 0, 255), (self.buzon_limite_der, 0), (self.buzon_limite_der, settings.SCREEN_HEIGHT), 2)
+
+            # Hitbox de todos los sprites (Verde)
             for sprite in self.all_sprites:
                 if hasattr(sprite, 'hitbox'):
                     pygame.draw.rect(surface, (0, 255, 0), sprite.hitbox, 2)
