@@ -6,6 +6,8 @@ from .states.intro_state import IntroState
 from .states.hub_state import HubState
 from .games.paperboy.paperboy_state import PaperboyState
 from .states.game_over_state import GameOverState
+from .states.arcade_state import ArcadeState
+from .games.pong.pong_state import PongState
 
 class App:
     def __init__(self):
@@ -21,6 +23,8 @@ class App:
             'HUB': HubState,
             'PAPERBOY': PaperboyState,
             'GAME_OVER': GameOverState,
+            'ARCADE': ArcadeState,
+            'PONG': PongState,  # Asegúrate de que PongState esté importado correctamente
         }
         self.state_name = 'INTRO'
         # Creamos la PRIMERA instancia del estado inicial

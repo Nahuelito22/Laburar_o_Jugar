@@ -48,9 +48,9 @@ class HubState(BaseState):
             self.done = True
             
         if self.player.rect.colliderect(self.play_zone):
-            print("TRANSICIÓN: Arcade")
-            # self.next_state = "ARCADE_HUB"
-            # self.done = True
+                print("TRANSICIÓN: Arcade")
+                self.next_state = "ARCADE" # <-- CAMBIADO
+                self.done = True
 
     def draw(self, surface):
         # 1. SIEMPRE dibujamos el fondo primero. Esto borra la pantalla.
