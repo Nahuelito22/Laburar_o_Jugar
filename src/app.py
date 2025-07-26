@@ -1,7 +1,6 @@
 # src/app.py
 import pygame
 from . import settings
-# --- CAMBIO: Ahora importamos las CLASES, no creamos las instancias ---
 from .states.intro_state import IntroState
 from .states.hub_state import HubState
 from .games.paperboy.paperboy_state import PaperboyState
@@ -17,17 +16,15 @@ class App:
         pygame.display.set_caption("Laburar o Jugar?")
         self.clock = pygame.time.Clock()
         
-        # --- CAMBIO: El diccionario ahora guarda las CLASES, no los objetos ---
         self.state_classes = {
             'INTRO': IntroState,
             'HUB': HubState,
             'PAPERBOY': PaperboyState,
             'GAME_OVER': GameOverState,
             'ARCADE': ArcadeState,
-            'PONG': PongState,  # Asegúrate de que PongState esté importado correctamente
+            'PONG': PongState,
         }
         self.state_name = 'INTRO'
-        # Creamos la PRIMERA instancia del estado inicial
         self.current_state = self.state_classes[self.state_name]()
         self.current_state.startup({})
 
@@ -52,6 +49,9 @@ class App:
         self.state_name = self.current_state.next_state
         persistent_data = self.current_state.persistent
         
-        # --- CAMBIO CLAVE: Creamos una NUEVA instancia del siguiente estado ---
+        # --- NUEVO: Limpiamos el estado actual ANTES de cambiar ---
+        self.current_state.cleanup()
+        
+        # Creamos una NUEVA instancia del siguiente estado
         self.current_state = self.state_classes[self.state_name]()
         self.current_state.startup(persistent_data)
