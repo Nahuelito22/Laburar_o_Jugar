@@ -23,6 +23,8 @@ class PaperboyState(BaseState):
         
         self.score = 0
         self.periodicos_restantes = 10
+        self.fichas = 0
+        self.dinero_total_inicial = 0 # Guardará el dinero al iniciar la partida
 
         self.buzon_limite_izq = 450
         self.buzon_limite_der = 860
@@ -31,6 +33,12 @@ class PaperboyState(BaseState):
         pygame.time.set_timer(self.SPAWN_BUZON_EVENT, 2500)
         self.SPAWN_AUTO_EVENT = pygame.USEREVENT + 2
         pygame.time.set_timer(self.SPAWN_AUTO_EVENT, 3500)
+    
+    def startup(self, persistent):
+        """Al entrar, recibimos y guardamos los datos de la sesión."""
+        super().startup(persistent)
+        self.fichas = self.persistent.get('fichas', 0)
+        self.dinero_total_inicial = self.persistent.get('dinero_total', 0)
 
     def get_event(self, event):
         if event.type == pygame.QUIT:
@@ -77,17 +85,14 @@ class PaperboyState(BaseState):
                 self.score -= 5
                 buzon.kill()
         
-        # --- LÍNEA CORREGIDA AQUÍ ---
         screen_rect = pygame.Rect(0, 0, settings.SCREEN_WIDTH, settings.SCREEN_HEIGHT)
         for periodico in list(self.projectiles):
-            # Si un periódico sale de la pantalla...
             if not screen_rect.colliderect(periodico.rect):
-                # ... y no había acertado a nada...
                 if not periodico.acerto:
                     self.score -= 1
-                periodico.kill() # Lo eliminamos
+                periodico.kill()
 
-        # Lógica de Derrota y Guardado (sin cambios)
+        # Lógica de Derrota y Guardado
         lost = False
         obstaculos_activos = [obs for obs in self.obstacles if hasattr(obs, 'is_active') and obs.is_active]
         if self.player.hitbox.collidelist([obs.hitbox for obs in obstaculos_activos]) != -1:
@@ -96,13 +101,22 @@ class PaperboyState(BaseState):
             lost = True
 
         if lost:
+            # Cargamos los datos guardados para leer el high_score
             save_data = save_manager.load_data()
-            dinero_total_anterior = save_data.get('dinero_total', 0)
-            save_data['dinero_total'] = dinero_total_anterior + self.score
+            
+            # Calculamos el nuevo dinero total basándonos en lo que teníamos AL ENTRAR
+            dinero_final = self.dinero_total_inicial + self.score
+            
+            # Actualizamos los datos para guardar
+            save_data['dinero_total'] = dinero_final
+            save_data['fichas'] = self.fichas
             if self.score > save_data.get('high_score', 0):
                 save_data['high_score'] = self.score
+            
+            # Guardamos todo
             save_manager.save_data(save_data)
             
+            # Pasamos el puntaje de la partida a la pantalla de Game Over
             self.persistent['last_score'] = self.score
             self.done = True
             self.next_state = "GAME_OVER"
@@ -118,17 +132,12 @@ class PaperboyState(BaseState):
         surface.blit(score_text, (10, 10))
         surface.blit(ammo_text, (10, 50))
 
-        # --- DEBUG COMPLETO ---
+        # DEBUG
         if settings.DEBUG_MODE:
-            # Límites del jugador (Rojo)
             pygame.draw.line(surface, (255, 0, 0), (self.player.limite_izquierdo, 0), (self.player.limite_izquierdo, settings.SCREEN_HEIGHT), 2)
             pygame.draw.line(surface, (255, 0, 0), (self.player.limite_derecho, 0), (self.player.limite_derecho, settings.SCREEN_HEIGHT), 2)
-            
-            # Límites de los buzones (Azul)
             pygame.draw.line(surface, (0, 0, 255), (self.buzon_limite_izq, 0), (self.buzon_limite_izq, settings.SCREEN_HEIGHT), 2)
             pygame.draw.line(surface, (0, 0, 255), (self.buzon_limite_der, 0), (self.buzon_limite_der, settings.SCREEN_HEIGHT), 2)
-
-            # Hitbox de todos los sprites (Verde)
             for sprite in self.all_sprites:
                 if hasattr(sprite, 'hitbox'):
                     pygame.draw.rect(surface, (0, 255, 0), sprite.hitbox, 2)

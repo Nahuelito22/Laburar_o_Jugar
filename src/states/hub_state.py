@@ -42,16 +42,19 @@ class HubState(BaseState):
         """Se ejecuta al entrar al estado."""
         super().startup(persistent)
         
-        # --- LÓGICA ACTUALIZADA ---
-        # Priorizamos los datos pasados del estado anterior (como de GameOver)
+        # Priorizamos los datos pasados del estado anterior
         self.dinero_total = self.persistent.get('dinero_total')
-        self.fichas = self.persistent.get('fichas', 0)
+        self.fichas = self.persistent.get('fichas') # <-- Quitamos el valor por defecto
 
-        # Si no se pasó dinero (porque es la primera vez que se abre el juego),
-        # lo cargamos del archivo de guardado.
+        # Si no se pasó dinero (porque es la primera vez), lo cargamos del archivo
         if self.dinero_total is None:
             save_data = save_manager.load_data()
             self.dinero_total = save_data.get('dinero_total', 0)
+        
+        # --- NUEVO: Hacemos lo mismo para las fichas ---
+        if self.fichas is None:
+            save_data = save_manager.load_data()
+            self.fichas = save_data.get('fichas', 0)
 
     def get_event(self, event):
         if event.type == pygame.QUIT:
