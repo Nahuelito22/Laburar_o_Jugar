@@ -5,6 +5,7 @@ from ...states.base_state import BaseState
 from ... import settings
 from ...components.scrolling_background import ScrollingBackground
 from .entities import PlayerPaperboy, Buzon, Auto, Periodico
+from ... import save_manager # <-- Importamos el gestor de guardado
 
 class PaperboyState(BaseState):
     def __init__(self):
@@ -23,8 +24,6 @@ class PaperboyState(BaseState):
         self.score = 0
         self.periodicos_restantes = 10
 
-        # --- NUEVO: Límites para los buzones ---
-        # Ajustá estos valores para que coincidan con tus veredas
         self.buzon_limite_izq = 450
         self.buzon_limite_der = 860
 
@@ -39,9 +38,7 @@ class PaperboyState(BaseState):
         if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
             self.done = True
         
-        # --- Manejo de Spawning ACTUALIZADO ---
         if event.type == self.SPAWN_BUZON_EVENT:
-            # Le pasamos los nuevos límites al Buzon
             buzon = Buzon(self.background.speed_y, self.buzon_limite_izq, self.buzon_limite_der)
             self.all_sprites.add(buzon)
             self.targets.add(buzon)
@@ -71,26 +68,35 @@ class PaperboyState(BaseState):
         if hits:
             self.score += 10
             self.periodicos_restantes += 2
-            print(f"Acierto! Puntaje: {self.score}, Periódicos: {self.periodicos_restantes}")
 
         for buzon in list(self.targets):
             if buzon.rect.top > settings.SCREEN_HEIGHT:
                 self.score -= 5
-                print(f"Buzón perdido! Puntaje: {self.score}")
                 buzon.kill()
 
-        # Lógica de Derrota y Colisión
+        # --- Lógica de Derrota y Guardado ---
+        lost = False
         obstaculos_activos = [obs for obs in self.obstacles if hasattr(obs, 'is_active') and obs.is_active]
         
-        for obs in obstaculos_activos:
-            if self.player.hitbox.colliderect(obs.hitbox):
-                print("¡CHOQUE! Fin del juego.")
-                self.done = True
-                self.next_state = "GAME_OVER"
-                break
-
+        if self.player.hitbox.collidelist([obs.hitbox for obs in obstaculos_activos]) != -1:
+            print("¡CHOQUE! Fin del juego.")
+            lost = True
+        
         if self.periodicos_restantes <= 0 and not self.projectiles:
             print("¡Sin periódicos! Fin del juego.")
+            lost = True
+
+        if lost:
+            # Cargamos los datos guardados
+            save_data = save_manager.load_data()
+            # Actualizamos el récord si es necesario
+            if self.score > save_data.get('high_score', 0):
+                save_data['high_score'] = self.score
+            # Guardamos
+            save_manager.save_data(save_data)
+            
+            # Pasamos el puntaje final a la pantalla de Game Over
+            self.persistent['last_score'] = self.score
             self.done = True
             self.next_state = "GAME_OVER"
 
@@ -105,17 +111,12 @@ class PaperboyState(BaseState):
         surface.blit(score_text, (10, 10))
         surface.blit(ammo_text, (10, 50))
 
-        # --- DEBUG ACTUALIZADO ---
+        # Modo Debug
         if settings.DEBUG_MODE:
-            # Límites del jugador (Rojo)
             pygame.draw.line(surface, (255, 0, 0), (self.player.limite_izquierdo, 0), (self.player.limite_izquierdo, settings.SCREEN_HEIGHT), 2)
             pygame.draw.line(surface, (255, 0, 0), (self.player.limite_derecho, 0), (self.player.limite_derecho, settings.SCREEN_HEIGHT), 2)
-            
-            # Límites de los buzones (Azul)
             pygame.draw.line(surface, (0, 0, 255), (self.buzon_limite_izq, 0), (self.buzon_limite_izq, settings.SCREEN_HEIGHT), 2)
             pygame.draw.line(surface, (0, 0, 255), (self.buzon_limite_der, 0), (self.buzon_limite_der, settings.SCREEN_HEIGHT), 2)
-
-            # Hitbox de todos los sprites (Verde)
             for sprite in self.all_sprites:
                 if hasattr(sprite, 'hitbox'):
                     pygame.draw.rect(surface, (0, 255, 0), sprite.hitbox, 2)
