@@ -7,6 +7,7 @@ from .games.paperboy.paperboy_state import PaperboyState
 from .states.game_over_state import GameOverState
 from .states.arcade_state import ArcadeState
 from .games.pong.pong_state import PongState
+from .states.menu_state import MenuState
 
 class App:
     def __init__(self):
@@ -17,6 +18,7 @@ class App:
         self.clock = pygame.time.Clock()
         
         self.state_classes = {
+            'MENU': MenuState,
             'INTRO': IntroState,
             'HUB': HubState,
             'PAPERBOY': PaperboyState,
@@ -24,7 +26,7 @@ class App:
             'ARCADE': ArcadeState,
             'PONG': PongState,
         }
-        self.state_name = 'INTRO'
+        self.state_name = 'MENU'
         self.current_state = self.state_classes[self.state_name]()
         self.current_state.startup({})
 

@@ -16,11 +16,12 @@ class IntroState(BaseState):
         self.total_blinks = 2
         self.scene_timer = 0
         self.scene_duration = 6000
-        self.next_state = "HUB"
+        
 
     def startup(self, persistent):
         super().startup(persistent)
         self.alarm_sound.play()
+        self.next_state = "HUB"
 
     def update(self, dt):
         self.scene_timer += dt * 1000
