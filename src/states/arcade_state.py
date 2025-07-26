@@ -17,9 +17,9 @@ class ArcadeState(BaseState):
         # pygame.Rect(posicion_x, posicion_y, ancho, alto)
         # ¡Estos son los valores que tenés que modificar para ajustar los rectángulos!
         self.machines = {
-            "PONG": pygame.Rect(350, 280, 150, 300),
-            "SF": pygame.Rect(550, 280, 150, 300), # Ejemplo para la 2da máquina
-            "CXYS": pygame.Rect(750, 280, 150, 300) # Ejemplo para la 3ra máquina
+            "PONG": pygame.Rect(390, 280, 125, 300),
+            "SF": pygame.Rect(555, 280, 125, 300), # Ejemplo para la 2da máquina
+            "CXYS": pygame.Rect(720, 280, 125, 300) # Ejemplo para la 3ra máquina
         }
         
         # --- NUEVO: Lógica para el aviso de interacción ---
