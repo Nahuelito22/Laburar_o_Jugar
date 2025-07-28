@@ -116,7 +116,7 @@ class ArcadeState(BaseState):
                     break
 
     def draw_credits_popup(self, surface):
-        popup_rect = pygame.Rect(0, 0, 700, 350)
+        popup_rect = pygame.Rect(0, 0, 1000, 350)
         popup_rect.center = (settings.SCREEN_WIDTH / 2, settings.SCREEN_HEIGHT / 2)
         pygame.draw.rect(surface, (20, 20, 50), popup_rect)
         pygame.draw.rect(surface, settings.WHITE, popup_rect, 3)
@@ -130,7 +130,7 @@ class ArcadeState(BaseState):
         surface.blit(cancel_text, cancel_text.get_rect(centerx=popup_rect.centerx, y=popup_rect.top + 250))
 
     def draw_slots_popup(self, surface):
-        popup_rect = pygame.Rect(0, 0, 700, 400)
+        popup_rect = pygame.Rect(0, 0, 1000, 400)
         popup_rect.center = (settings.SCREEN_WIDTH / 2, settings.SCREEN_HEIGHT / 2)
         pygame.draw.rect(surface, (50, 20, 20), popup_rect)
         pygame.draw.rect(surface, settings.WHITE, popup_rect, 3)
