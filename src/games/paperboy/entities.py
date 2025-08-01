@@ -15,11 +15,11 @@ class PlayerPaperboy(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
         self.animations = {
-            'ride': self.cargar_animacion("assets/images/Paperboy_ride.png"),
-            'spin_left': self.cargar_animacion("assets/images/Paperboy_spin_left.png"),
-            'spin_right': self.cargar_animacion("assets/images/Paperboy_spin_right.png"),
-            'throw_left': self.cargar_animacion("assets/images/Paperboy_throw_left.png", False),
-            'throw_right': self.cargar_animacion("assets/images/Paperboy_throw_right.png", False)
+            'ride': self.cargar_animacion(settings.resource_path("images/Paperboy_ride.png")),
+            'spin_left': self.cargar_animacion(settings.resource_path("images/Paperboy_spin_left.png")),
+            'spin_right': self.cargar_animacion(settings.resource_path("images/Paperboy_spin_right.png")),
+            'throw_left': self.cargar_animacion(settings.resource_path("images/Paperboy_throw_left.png"), False),
+            'throw_right': self.cargar_animacion(settings.resource_path("images/Paperboy_throw_right.png"), False)
         }
         self.estado_animacion = 'ride'
         self.current_frame = 0
@@ -30,7 +30,6 @@ class PlayerPaperboy(pygame.sprite.Sprite):
         self.speed = 350
         self.limite_izquierdo = 450
         self.limite_derecho = 860
-        
         self.hitbox = self.rect.inflate(-self.rect.width * 0.75, -self.rect.height * 0.40)
 
     def cargar_animacion(self, spritesheet_path, loop=True):
@@ -77,17 +76,14 @@ class PlayerPaperboy(pygame.sprite.Sprite):
             self.rect.y += self.speed * dt
         
         self.hitbox.center = self.rect.center
-
         if self.hitbox.left < self.limite_izquierdo:
             self.hitbox.left = self.limite_izquierdo
             self.rect.centerx = self.hitbox.centerx
         if self.hitbox.right > self.limite_derecho:
             self.hitbox.right = self.limite_derecho
             self.rect.centerx = self.hitbox.centerx
-
         if self.rect.top < 0: self.rect.top = 0
         if self.rect.bottom > settings.SCREEN_HEIGHT: self.rect.bottom = settings.SCREEN_HEIGHT
-        
         self.hitbox.center = self.rect.center
 
     def lanzar(self, estado):
@@ -102,8 +98,8 @@ class Buzon(pygame.sprite.Sprite):
         colores = ["blue", "green", "red", "yellow"]
         lado = random.choice(["izquierda", "derecha"])
         
-        img_path = f"assets/images/mailbox_{random.choice(colores)}.png"
-        self.image = pygame.image.load(img_path).convert_alpha()
+        img_path = f"images/mailbox_{random.choice(colores)}.png"
+        self.image = pygame.image.load(settings.resource_path(img_path)).convert_alpha()
         self.image = pygame.transform.scale(self.image, (BUZON_WIDTH, BUZON_HEIGHT))
         
         if lado == "izquierda":
@@ -118,7 +114,8 @@ class Buzon(pygame.sprite.Sprite):
 
     def update(self, dt):
         self.rect.y += self.scroll_speed * dt
-        
+        if self.rect.top > settings.SCREEN_HEIGHT:
+            self.kill()
 
 class Auto(pygame.sprite.Sprite):
     def __init__(self, scroll_speed):
@@ -131,8 +128,8 @@ class Auto(pygame.sprite.Sprite):
             {'nombre': 'police_car', 'height': 420, 'num_frames': 2}
         ]
         vehiculo_elegido = random.choice(tipos_de_vehiculos)
-        path = f"assets/images/{vehiculo_elegido['nombre']}_move.png"
-        spritesheet = SpriteSheet(path)
+        path = f"images/{vehiculo_elegido['nombre']}_move.png"
+        spritesheet = SpriteSheet(settings.resource_path(path))
         
         self.animation_frames = []
         frame_height = vehiculo_elegido['height']
@@ -176,11 +173,10 @@ class Auto(pygame.sprite.Sprite):
 class Periodico(pygame.sprite.Sprite):
     def __init__(self, start_pos, target_pos, scroll_speed):
         super().__init__()
-        self.image = pygame.image.load("assets/images/periodico.png").convert_alpha()
+        self.image = pygame.image.load(settings.resource_path("images/periodico.png")).convert_alpha()
         self.image = pygame.transform.scale(self.image, (32, 32))
         self.rect = self.image.get_rect(center=start_pos)
         
-        # Bandera para saber si acertó
         self.acerto = False
         
         self.scroll_speed = scroll_speed

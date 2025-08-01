@@ -11,8 +11,8 @@ class MenuState(BaseState):
         self.next_state = "INTRO"
         
         # --- Fuentes ---
-        self.title_font = pygame.font.Font("assets/fonts/UAV-OSD-Mono.ttf", 80)
-        self.button_font = pygame.font.Font("assets/fonts/UAV-OSD-Mono.ttf", 60)
+        self.title_font = pygame.font.Font(settings.resource_path("fonts/UAV-OSD-Mono.ttf"), 80)
+        self.button_font = pygame.font.Font(settings.resource_path("fonts/UAV-OSD-Mono.ttf"), 60)
         self.help_font = pygame.font.Font(None, 32)
 
         # --- TÍTULO ---
@@ -31,13 +31,12 @@ class MenuState(BaseState):
         self.new_game_text = self.button_font.render("Nueva Partida", True, settings.WHITE)
         self.new_game_rect = self.new_game_text.get_rect(center=(settings.SCREEN_WIDTH / 2, 350))
         
-        # Cargamos los datos para ver si existe una partida guardada
         if os.path.exists(save_manager.SAVE_FILE):
             save_data = save_manager.load_data()
             nombre_guardado = save_data.get('nombre_usuario', 'Jugador')
             self.continue_text = self.button_font.render(f"Continuar: {nombre_guardado}", True, settings.WHITE)
         else:
-            self.continue_text = self.button_font.render("Continuar", True, (100, 100, 100)) # Gris
+            self.continue_text = self.button_font.render("Continuar", True, (100, 100, 100))
         
         self.continue_rect = self.continue_text.get_rect(center=(settings.SCREEN_WIDTH / 2, 500))
 
@@ -51,13 +50,11 @@ class MenuState(BaseState):
         if event.type == pygame.QUIT:
             self.quit = True
 
-        # Si el pop-up de ayuda está activo, cualquier tecla lo cierra
         if self.ayuda_activa:
             if event.type == pygame.KEYDOWN or event.type == pygame.MOUSEBUTTONDOWN:
                 self.ayuda_activa = False
             return
 
-        # Si estamos ingresando un nombre
         if self.ingresando_nombre:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_RETURN:
@@ -70,7 +67,6 @@ class MenuState(BaseState):
                 else:
                     self.nombre_usuario += event.unicode
         
-        # Si estamos en el menú principal
         else:
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 if self.new_game_rect.collidepoint(event.pos):
@@ -86,7 +82,6 @@ class MenuState(BaseState):
                     self.ayuda_activa = True
 
     def draw_help_popup(self, surface):
-        """Dibuja la pantalla de ayuda."""
         popup_rect = pygame.Rect(0, 0, 800, 400)
         popup_rect.center = (settings.SCREEN_WIDTH / 2, settings.SCREEN_HEIGHT / 2)
         pygame.draw.rect(surface, (20, 20, 50), popup_rect)
@@ -112,17 +107,15 @@ class MenuState(BaseState):
         
         if not self.ingresando_nombre:
             mouse_pos = pygame.mouse.get_pos()
-            # Botón Nueva Partida
             if self.new_game_rect.collidepoint(mouse_pos): pygame.draw.rect(surface, (70, 70, 100), self.new_game_rect.inflate(20, 20))
             else: pygame.draw.rect(surface, (40, 40, 70), self.new_game_rect.inflate(20, 20))
-            # Botón Continuar
             if self.continue_rect.collidepoint(mouse_pos): pygame.draw.rect(surface, (70, 70, 100), self.continue_rect.inflate(20, 20))
             else: pygame.draw.rect(surface, (40, 40, 70), self.continue_rect.inflate(20, 20))
             
             surface.blit(self.new_game_text, self.new_game_rect)
             surface.blit(self.continue_text, self.continue_rect)
             surface.blit(self.help_icon, self.help_rect)
-        else: # Pantalla de Ingreso de Nombre
+        else:
             prompt_text = self.button_font.render("Ingresa tu nombre:", True, settings.WHITE)
             prompt_rect = prompt_text.get_rect(center=(settings.SCREEN_WIDTH / 2, 300))
             surface.blit(prompt_text, prompt_rect)
@@ -131,7 +124,6 @@ class MenuState(BaseState):
             input_surface = self.button_font.render(self.nombre_usuario, True, settings.WHITE)
             surface.blit(input_surface, (self.input_box.x + 15, self.input_box.y + 10))
 
-        # Dibujamos el pop-up de ayuda si está activo
         if self.ayuda_activa:
             surface.blit(self.dim_surface, (0, 0))
             self.draw_help_popup(surface)

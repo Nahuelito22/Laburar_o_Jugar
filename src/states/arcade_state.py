@@ -8,7 +8,7 @@ from ..entities import PlayerHub
 class ArcadeState(BaseState):
     def __init__(self):
         super().__init__()
-        self.background_image = pygame.image.load("assets/images/hub_arcade.png").convert()
+        self.background_image = pygame.image.load(settings.resource_path("images/hub_arcade.png")).convert()
         self.background_image = pygame.transform.scale(self.background_image, settings.SCREEN_SIZE)
 
         self.player = PlayerHub(x=settings.SCREEN_WIDTH - 150, y=settings.SCREEN_HEIGHT - 80)
@@ -30,8 +30,8 @@ class ArcadeState(BaseState):
         self.maquina_activa = None
         
         # Assets para la UI
-        self.interaction_font = pygame.font.Font("assets/fonts/UAV-OSD-Mono.ttf", 50)
-        self.popup_font = pygame.font.Font("assets/fonts/UAV-OSD-Mono.ttf", 40)
+        self.interaction_font = pygame.font.Font(settings.resource_path("fonts/UAV-OSD-Mono.ttf"), 50)
+        self.popup_font = pygame.font.Font(settings.resource_path("fonts/UAV-OSD-Mono.ttf"), 40)
         self.hud_font = pygame.font.Font(None, 50)
         self.prompt_surface = self.interaction_font.render("E", True, settings.WHITE)
         self.slots_result_text = None
@@ -53,12 +53,12 @@ class ArcadeState(BaseState):
         if event.type == pygame.KEYDOWN:
             # --- Lógica si un pop-up está ACTIVO ---
             if self.maquina_activa is not None:
-                if event.key == pygame.K_RETURN: # Presionar ENTER para confirmar
+                if event.key == pygame.K_RETURN:
                     if self.maquina_activa == "CREDITS":
                         if self.dinero_total >= self.costo_ficha:
                             self.dinero_total -= self.costo_ficha
                             self.fichas += 1
-                        self.maquina_activa = None
+                        self.maquina_activa = None # Cerramos el pop-up al confirmar
                     
                     elif self.maquina_activa == "SLOTS":
                         if self.dinero_total >= 50:
@@ -93,7 +93,7 @@ class ArcadeState(BaseState):
                         self.maquina_activa = "CREDITS"
                     
                     elif machine == "SLOTS":
-                        self.slots_result_text = None # Reinicia el texto del resultado
+                        self.slots_result_text = None
                         self.maquina_activa = "SLOTS"
 
                     elif machine in ["PONG", "SF", "CXYS"]:

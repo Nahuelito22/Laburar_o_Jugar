@@ -8,7 +8,7 @@ from .. import save_manager
 class HubState(BaseState):
     def __init__(self):
         super().__init__()
-        self.background_image = pygame.image.load("assets/images/background_hub_Final.jpg").convert()
+        self.background_image = pygame.image.load(settings.resource_path("images/background_hub_Final.jpg")).convert()
         
         self.all_sprites = pygame.sprite.Group()
         self.player = PlayerHub(

@@ -6,8 +6,8 @@ from .. import settings
 class IntroState(BaseState):
     def __init__(self):
         super().__init__()
-        self.intro_image = pygame.image.load("assets/images/intro_scene.png").convert()
-        self.alarm_sound = pygame.mixer.Sound("assets/sounds/alarm_clock.wav")
+        self.intro_image = pygame.image.load(settings.resource_path("images/intro_scene.png")).convert()
+        self.alarm_sound = pygame.mixer.Sound(settings.resource_path("sounds/alarm_clock.wav"))
         self.blink_surface = pygame.Surface(settings.SCREEN_SIZE)
         self.blink_surface.fill(settings.BLACK)
         self.alpha = 255

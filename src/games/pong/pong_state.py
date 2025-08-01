@@ -10,14 +10,15 @@ class PongState(BaseState):
         self.next_state = "ARCADE"
         
         # --- Carga de Assets ---
-        self.fondo = pygame.image.load("assets/images/fondo_pong.jpg").convert()
+        self.fondo = pygame.image.load(settings.resource_path("images/fondo_pong.jpg")).convert()
         self.fondo = pygame.transform.scale(self.fondo, settings.SCREEN_SIZE)
         
-        self.golpe_p1_sound = pygame.mixer.Sound("assets/sounds/pongP1.wav")
-        self.golpe_p2_sound = pygame.mixer.Sound("assets/sounds/pongP2.wav")
-        self.point_sound = pygame.mixer.Sound('assets/sounds/point.mp3')
+        self.golpe_p1_sound = pygame.mixer.Sound(settings.resource_path("sounds/pongP1.wav"))
+        self.golpe_p2_sound = pygame.mixer.Sound(settings.resource_path("sounds/pongP2.wav"))
+        self.point_sound = pygame.mixer.Sound(settings.resource_path('sounds/point.mp3'))
+        self.music_path = settings.resource_path("sounds/music_pong.mp3") # Guardamos la ruta para usarla después
 
-        # --- Fuentes ---
+        # --- Fuentes
         self.score_font = pygame.font.Font(None, 100)
         self.player_font = pygame.font.Font(None, 40)
         self.pause_font = pygame.font.Font(None, 60)
@@ -33,8 +34,8 @@ class PongState(BaseState):
     def startup(self, persistent):
         """Se ejecuta cada vez que entramos al estado."""
         super().startup(persistent)
-        self.reset_game() # Reinicia el juego cada vez que se gasta una ficha
-        pygame.mixer.music.load("assets/sounds/music_pong.mp3")
+        self.reset_game()
+        pygame.mixer.music.load(self.music_path)
         pygame.mixer.music.set_volume(0.5)
         pygame.mixer.music.play(-1)
 
@@ -59,7 +60,7 @@ class PongState(BaseState):
             self.quit = True
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
-                self.done = True # Vuelve al Arcade
+                self.done = True
             if event.key == pygame.K_p:
                 self.pausa = not self.pausa
             # Jugador 1
@@ -75,7 +76,7 @@ class PongState(BaseState):
 
     def update(self, dt):
         if self.pausa or self.winner_text:
-            return # Si está en pausa o hay un ganador, no actualizamos nada
+            return
 
         # Movimiento de jugadores
         self.player1.y += self.player1_speed
@@ -96,7 +97,7 @@ class PongState(BaseState):
             self.pelota_speed_y *= -1
         
         if self.pelota.colliderect(self.player1) and self.pelota_speed_x < 0:
-            self.pelota_speed_x *= -1.1 # Aumenta la velocidad un poco
+            self.pelota_speed_x *= -1.1
             self.golpe_p1_sound.play()
         if self.pelota.colliderect(self.player2) and self.pelota_speed_x > 0:
             self.pelota_speed_x *= -1.1

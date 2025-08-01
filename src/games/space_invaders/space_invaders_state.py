@@ -13,10 +13,10 @@ class SpaceInvadersState(BaseState):
         self.score = 0
 
         # --- Carga de Assets ---
-        self.fondo = pygame.image.load("assets/images/fondo_space.jpg").convert()
+        self.fondo = pygame.image.load(settings.resource_path("images/fondo_space.jpg")).convert()
         self.fondo = pygame.transform.scale(self.fondo, settings.SCREEN_SIZE)
         
-        sprite_sheet = pygame.image.load('assets/images/nave_sheet.png').convert_alpha()
+        sprite_sheet = pygame.image.load(settings.resource_path('images/nave_sheet.png')).convert_alpha()
         nave_cenital = pygame.transform.scale(sprite_sheet.subsurface((0, 0, 512, 512)), (80, 80))
         nave_derecha = pygame.transform.scale(sprite_sheet.subsurface((512, 0, 512, 512)), (90, 90))
         nave_izquierda = pygame.transform.scale(sprite_sheet.subsurface((1024, 0, 512, 512)), (90, 90))
@@ -25,7 +25,7 @@ class SpaceInvadersState(BaseState):
         
         self.imagenes_explosion = []
         for i in range(1, 4):
-            img = pygame.image.load(f'assets/images/explosion{i}.png').convert_alpha()
+            img = pygame.image.load(settings.resource_path(f'images/explosion{i}.png')).convert_alpha()
             self.imagenes_explosion.append(pygame.transform.scale(img, (80, 80)))
 
         self.font = pygame.font.Font(None, 60)
@@ -135,5 +135,4 @@ class SpaceInvadersState(BaseState):
             self.nave.kill()
             
     def cleanup(self):
-        # Detenemos la música si la hubiera (no hay en este juego, pero es buena práctica)
         pass

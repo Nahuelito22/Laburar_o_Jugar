@@ -11,7 +11,11 @@ class PaperboyState(BaseState):
     def __init__(self):
         super().__init__()
         self.next_state = "HUB"
-        self.background = ScrollingBackground(image_path="assets/images/paperboy_level_strip.png", speed=300)
+        
+        self.background = ScrollingBackground(
+            image_path=settings.resource_path("images/paperboy_level_strip.png"), 
+            speed=300
+        )
         
         self.all_sprites = pygame.sprite.Group()
         self.obstacles = pygame.sprite.Group()
@@ -101,18 +105,12 @@ class PaperboyState(BaseState):
             lost = True
 
         if lost:
-            # Cargamos los datos guardados para leer el high_score
             save_data = save_manager.load_data()
-            
-            # Calculamos el nuevo dinero total 
             dinero_final = self.dinero_total_inicial + self.score
-            
-            # Actualizamos
             save_data['dinero_total'] = dinero_final
             save_data['fichas'] = self.fichas
             if self.score > save_data.get('high_score', 0):
                 save_data['high_score'] = self.score
-            
             save_manager.save_data(save_data)
             
             self.persistent['last_score'] = self.score

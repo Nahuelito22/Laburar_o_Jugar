@@ -37,7 +37,7 @@ class Disparo(pygame.sprite.Sprite):
 class Enemigo(pygame.sprite.Sprite):
     def __init__(self, x, y):
         super().__init__()
-        self.image = pygame.image.load("assets/images/red.png").convert_alpha()
+        self.image = pygame.image.load(settings.resource_path("images/red.png")).convert_alpha()
         self.image = pygame.transform.scale(self.image, (40, 40))
         self.rect = self.image.get_rect(topleft=(x, y))
     
