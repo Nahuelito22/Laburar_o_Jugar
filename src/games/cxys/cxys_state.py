@@ -7,9 +7,9 @@ class CXYSState(BaseState):
     def __init__(self):
         super().__init__()
         self.next_state = "ARCADE"
-        self.font = pygame.font.Font("assets/fonts/UAV-OSD-Mono.ttf", 60)
+        self.font = pygame.font.Font("assets/fonts/UAV-OSD-Mono.ttf", 40)
         
-        self.title_text = self.font.render("Juego en Construccion...(Pacman?,Arkanoid?,Asteroids?)", True, settings.WHITE)
+        self.title_text = self.font.render("Juego en Construccion...)", True, settings.WHITE)
         self.title_rect = self.title_text.get_rect(center=(settings.SCREEN_WIDTH / 2, settings.SCREEN_HEIGHT / 2 - 50))
 
         self.instructions_text = self.font.render("Presiona ESC para volver", True, (180, 180, 180))
