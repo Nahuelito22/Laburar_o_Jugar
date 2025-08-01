@@ -9,6 +9,7 @@ from .states.arcade_state import ArcadeState
 from .games.pong.pong_state import PongState
 from .states.menu_state import MenuState
 from .games.space_invaders.space_invaders_state import SpaceInvadersState
+from .games.cxys.cxys_state import CXYSState
 
 class App:
     def __init__(self):
@@ -27,6 +28,7 @@ class App:
             'ARCADE': ArcadeState,
             'PONG': PongState,
             'SF': SpaceInvadersState,
+            'CXYS': CXYSState,
         }
         self.state_name = 'MENU'
         self.current_state = self.state_classes[self.state_name]()
