@@ -16,35 +16,34 @@ class SpaceInvadersState(BaseState):
         self.fondo = pygame.image.load("assets/images/fondo_space.jpg").convert()
         self.fondo = pygame.transform.scale(self.fondo, settings.SCREEN_SIZE)
         
-        # Cargar nave
         sprite_sheet = pygame.image.load('assets/images/nave_sheet.png').convert_alpha()
         nave_cenital = pygame.transform.scale(sprite_sheet.subsurface((0, 0, 512, 512)), (80, 80))
         nave_derecha = pygame.transform.scale(sprite_sheet.subsurface((512, 0, 512, 512)), (90, 90))
         nave_izquierda = pygame.transform.scale(sprite_sheet.subsurface((1024, 0, 512, 512)), (90, 90))
         
-        self.nave = Nave(nave_cenital, nave_izquierda, nave_derecha)
+        self.nave_template = Nave(nave_cenital, nave_izquierda, nave_derecha)
         
-        # Cargar explosión
         self.imagenes_explosion = []
         for i in range(1, 4):
             img = pygame.image.load(f'assets/images/explosion{i}.png').convert_alpha()
             self.imagenes_explosion.append(pygame.transform.scale(img, (80, 80)))
 
-        # --- Fuentes ---
         self.font = pygame.font.Font(None, 60)
         self.game_over_font = pygame.font.Font(None, 80)
 
     def startup(self, persistent):
-        """Reinicia el juego cada vez que entramos."""
         super().startup(persistent)
-        self.all_sprites = pygame.sprite.Group()
+        # --- Grupos de Sprites ---
+        self.nave_group = pygame.sprite.GroupSingle()
         self.disparos = pygame.sprite.Group()
         self.enemigos = pygame.sprite.Group()
         self.explosiones = pygame.sprite.Group()
         
+        # --- Reinicio del Juego ---
+        self.nave = self.nave_template
         self.nave.rect.centerx = settings.SCREEN_WIDTH / 2
         self.nave.speed = 0
-        self.all_sprites.add(self.nave)
+        self.nave_group.add(self.nave)
         
         self.score = 0
         self.game_over = False
@@ -67,7 +66,6 @@ class SpaceInvadersState(BaseState):
                     if len(self.disparos) < 8:
                         d1 = Disparo(self.nave.rect.left + 5, self.nave.rect.top + 35)
                         d2 = Disparo(self.nave.rect.right - 20, self.nave.rect.top + 35)
-                        self.all_sprites.add(d1, d2)
                         self.disparos.add(d1, d2)
         
         if event.type == pygame.KEYUP:
@@ -79,9 +77,10 @@ class SpaceInvadersState(BaseState):
             self.explosiones.update(dt)
             return
 
-        self.all_sprites.update(dt)
+        # --- ACTUALIZACIÓN SEPARADA DE GRUPOS ---
+        self.nave_group.update(dt)
+        self.disparos.update(dt)
         
-        # Lógica de movimiento de enemigos
         bajar = 0
         if any(e.rect.right >= settings.SCREEN_WIDTH or e.rect.left <= 0 for e in self.enemigos):
             self.direccion_enemigos *= -1
@@ -101,17 +100,18 @@ class SpaceInvadersState(BaseState):
         if pygame.sprite.spritecollide(self.nave, self.enemigos, False):
             self.trigger_game_over()
             
-        # Nueva oleada
         if not self.enemigos:
             self.velocidad_enemigos += 20
             self.crear_oleada()
 
     def draw(self, surface):
         surface.blit(self.fondo, (0, 0))
-        self.all_sprites.draw(surface)
+        # Dibujamos los grupos por separado
+        self.nave_group.draw(surface)
+        self.disparos.draw(surface)
+        self.enemigos.draw(surface)
         self.explosiones.draw(surface)
 
-        # Dibujar puntaje
         score_text = self.font.render(f"Puntaje: {self.score}", True, settings.WHITE)
         surface.blit(score_text, (10, 10))
 
@@ -125,7 +125,6 @@ class SpaceInvadersState(BaseState):
                 x = columna * 80 + 80
                 y = fila * 60 + 50
                 enemigo = Enemigo(x, y)
-                self.all_sprites.add(enemigo)
                 self.enemigos.add(enemigo)
     
     def trigger_game_over(self):
@@ -134,3 +133,7 @@ class SpaceInvadersState(BaseState):
             explosion = Explosion(self.nave.rect.center, self.imagenes_explosion)
             self.explosiones.add(explosion)
             self.nave.kill()
+            
+    def cleanup(self):
+        # Detenemos la música si la hubiera (no hay en este juego, pero es buena práctica)
+        pass
