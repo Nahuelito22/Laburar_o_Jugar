@@ -69,6 +69,17 @@ pip install -r requirements.txt
 ```bash
 python main.py
 ```
+## 🚀 Ejecutable del Juego (Versión Portable)
+* Para facilitar el acceso y la ejecución del juego sin necesidad de instalar Python o sus dependencias, se ha utilizado PyInstaller para generar un archivo ejecutable (.exe).
+
+Existen dos maneras de utilizarlo:
+
+    1) Descarga Directa:  
+    Podés descargar únicamente la carpeta dist/ (generalmente comprimida en un .zip desde la sección de "Releases" de GitHub). 
+    Una vez descomprimida, simplemente ejecutá el archivo Laburar o Jugar.exe que se encuentra adentro.
+
+    2) Acceso Directo en el Repositorio: 
+    Si clonaste el repositorio completo, se ha incluido un acceso directo en la carpeta raíz que apunta al ejecutable dentro de la carpeta dist/.
 
 ## ⚙️ Tecnologías Utilizadas
 - Lenguaje: Python 3
