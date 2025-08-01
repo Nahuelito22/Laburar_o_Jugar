@@ -1,4 +1,3 @@
-# src/settings.py
 import pygame
 
 # Dimensiones de la pantalla

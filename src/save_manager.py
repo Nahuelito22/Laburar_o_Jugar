@@ -1,4 +1,3 @@
-# src/save_manager.py
 import json
 
 SAVE_FILE = "savegame.json"
@@ -9,7 +8,7 @@ def load_data():
         with open(SAVE_FILE, 'r') as f:
             data = json.load(f)
     except FileNotFoundError:
-        # --- NUEVO: Valores por defecto si no hay partida guardada ---
+        # Valores por defecto si no hay partida guardada
         data = {
             'nombre_usuario': 'Jugador',
             'high_score': 0,

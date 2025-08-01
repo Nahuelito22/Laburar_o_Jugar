@@ -24,7 +24,7 @@ class PaperboyState(BaseState):
         self.score = 0
         self.periodicos_restantes = 10
         self.fichas = 0
-        self.dinero_total_inicial = 0 # Guardará el dinero al iniciar la partida
+        self.dinero_total_inicial = 0 
 
         self.buzon_limite_izq = 450
         self.buzon_limite_der = 860
@@ -104,19 +104,17 @@ class PaperboyState(BaseState):
             # Cargamos los datos guardados para leer el high_score
             save_data = save_manager.load_data()
             
-            # Calculamos el nuevo dinero total basándonos en lo que teníamos AL ENTRAR
+            # Calculamos el nuevo dinero total 
             dinero_final = self.dinero_total_inicial + self.score
             
-            # Actualizamos los datos para guardar
+            # Actualizamos
             save_data['dinero_total'] = dinero_final
             save_data['fichas'] = self.fichas
             if self.score > save_data.get('high_score', 0):
                 save_data['high_score'] = self.score
             
-            # Guardamos todo
             save_manager.save_data(save_data)
             
-            # Pasamos el puntaje de la partida a la pantalla de Game Over
             self.persistent['last_score'] = self.score
             self.done = True
             self.next_state = "GAME_OVER"

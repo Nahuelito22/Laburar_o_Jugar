@@ -2,11 +2,9 @@ import pygame
 from .components.spritesheet import SpriteSheet
 from . import settings
 
-# --- Dimensiones del fotograma de tus sprites (ajusta según tus archivos) ---
-PLAYER_FRAME_WIDTH = 256  # Ancho de un fotograma de la animación de caminar
-PLAYER_FRAME_HEIGHT = 256 # Alto de un fotograma
-
-# En src/entities.py
+# Dimensiones del fotograma de sprites 
+PLAYER_FRAME_WIDTH = 256  # Ancho 
+PLAYER_FRAME_HEIGHT = 256 # Alto 
 
 class PlayerHub(pygame.sprite.Sprite):
     def __init__(self, x, y):
@@ -26,8 +24,7 @@ class PlayerHub(pygame.sprite.Sprite):
         self.image = self.animations[self.estado][self.current_frame]
         self.rect = self.image.get_rect(centerx=x, bottom=y)
         
-        # --- NUEVO: Creamos el hitbox para el jugador del Hub ---
-        # Ajustá estos valores si querés que sea más grande o pequeño
+        # Creamos el hitbox para el jugador del Hub
         self.hitbox = self.rect.inflate(-self.rect.width * 0.7, -self.rect.height * 0.2)
         
         self.speed = 300
@@ -76,5 +73,5 @@ class PlayerHub(pygame.sprite.Sprite):
             self.current_frame = (self.current_frame + 1) % len(self.animations[self.estado])
             self.image = self.animations[self.estado][self.current_frame]
             
-        # --- NUEVO: Mantenemos el hitbox centrado ---
+        # Mantenemos el hitbox centrado
         self.hitbox.center = self.rect.center

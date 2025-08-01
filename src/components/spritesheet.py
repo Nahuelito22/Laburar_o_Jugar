@@ -14,8 +14,6 @@ class SpriteSheet:
         """
         Recorta y devuelve un fotograma específico de la hoja.
         """
-        # Creamos una nueva superficie transparente del tamaño del fotograma
         image = pygame.Surface((width, height), pygame.SRCALPHA)
-        # Dibujamos solo la porción de la hoja de sprites en la nueva superficie
         image.blit(self.sheet, (0, 0), (x, y, width, height))
         return image

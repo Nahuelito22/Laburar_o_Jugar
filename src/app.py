@@ -55,9 +55,9 @@ class App:
         self.state_name = self.current_state.next_state
         persistent_data = self.current_state.persistent
         
-        # --- NUEVO: Limpiamos el estado actual ANTES de cambiar ---
+        # Limpiamos el estado actual antes de cambiar
         self.current_state.cleanup()
         
-        # Creamos una NUEVA instancia del siguiente estado
+        # Creamos una NUEVA instancia del nuevo estado
         self.current_state = self.state_classes[self.state_name]()
         self.current_state.startup(persistent_data)

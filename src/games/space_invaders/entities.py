@@ -2,7 +2,7 @@
 import pygame
 from ... import settings
 
-# --- Clases de Sprites adaptadas ---
+# Clases de Sprites 
 class Nave(pygame.sprite.Sprite):
     def __init__(self, cenital_img, izq_img, der_img):
         super().__init__()
@@ -53,7 +53,7 @@ class Explosion(pygame.sprite.Sprite):
         self.rect = self.image.get_rect(center=center)
         self.frame = 0
         self.last_update = pygame.time.get_ticks()
-        self.frame_rate = 100 # ms por fotograma
+        self.frame_rate = 100 
 
     def update(self, dt):
         now = pygame.time.get_ticks()

@@ -10,7 +10,6 @@ PLAYER_FRAME_WIDTH = 256
 PLAYER_FRAME_HEIGHT = 256
 BUZON_WIDTH = 64
 BUZON_HEIGHT = 64
-# (Añade aquí las de los autos si es necesario)
 
 class PlayerPaperboy(pygame.sprite.Sprite):
     def __init__(self):
@@ -119,7 +118,7 @@ class Buzon(pygame.sprite.Sprite):
 
     def update(self, dt):
         self.rect.y += self.scroll_speed * dt
-        # La eliminación ahora la maneja el state para la penalización
+        
 
 class Auto(pygame.sprite.Sprite):
     def __init__(self, scroll_speed):
@@ -181,7 +180,7 @@ class Periodico(pygame.sprite.Sprite):
         self.image = pygame.transform.scale(self.image, (32, 32))
         self.rect = self.image.get_rect(center=start_pos)
         
-        # --- NUEVO: Bandera para saber si acertó ---
+        # Bandera para saber si acertó
         self.acerto = False
         
         self.scroll_speed = scroll_speed
@@ -197,4 +196,3 @@ class Periodico(pygame.sprite.Sprite):
     def update(self, dt):
         self.rect.x += self.vel_x * dt
         self.rect.y += self.vel_y * dt + self.scroll_speed * dt
-        # La eliminación ahora la maneja el state para la penalización
