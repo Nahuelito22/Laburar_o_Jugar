@@ -81,6 +81,7 @@ Una vez descomprimida, simplemente ejecutá el archivo Laburar o Jugar.exe que s
 Si clonaste el repositorio completo, se ha incluido un acceso directo en la carpeta raíz que apunta al ejecutable dentro de la carpeta dist/.
 
 ## 🎮 Gameplay
+> 📌 Esta es una **miniatura**: una imagen del video que podés clicar para ver el gameplay completo en YouTube.
 
 [![Ver gameplay en YouTube](https://img.youtube.com/vi/gRG6aZOQUCA/maxresdefault.jpg)](https://youtu.be/gRG6aZOQUCA)
 
