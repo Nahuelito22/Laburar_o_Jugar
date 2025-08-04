@@ -80,6 +80,13 @@ Una vez descomprimida, simplemente ejecutá el archivo Laburar o Jugar.exe que s
 2) Acceso Directo en el Repositorio: 
 Si clonaste el repositorio completo, se ha incluido un acceso directo en la carpeta raíz que apunta al ejecutable dentro de la carpeta dist/.
 
+## 🎮 Gameplay
+
+[![Ver gameplay en YouTube](https://img.youtube.com/vi/gRG6aZOQUCA/maxresdefault.jpg)](https://youtu.be/gRG6aZOQUCA)
+
+Disfrutá una demostración del juego **¿Laburar o Jugar?**, un proyecto interactivo desarrollado en Python con Pygame.
+
+
 ## ⚙️ Tecnologías Utilizadas
 - Lenguaje: Python 3
     - Librería Principal: Pygame
