@@ -1,6 +1,7 @@
 import pygame
 import random
 import math
+import os
 from ...states.base_state import BaseState
 from ... import settings
 from ... import save_manager
@@ -44,6 +45,16 @@ class AsteroidsState(BaseState):
         self.spawn_asteroids(4)
         self.game_over_flag = False
 
+        # Sound loading
+        self.sound_fire = pygame.mixer.Sound(os.path.join(settings.SOUNDS_DIR, 'fire_asteroids.wav'))
+        self.sound_thrust = pygame.mixer.Sound(os.path.join(settings.SOUNDS_DIR, 'thrust_asteroids.wav'))
+        self.sound_bang_large = pygame.mixer.Sound(os.path.join(settings.SOUNDS_DIR, 'bangLarge_asteroids.wav'))
+        self.sound_bang_medium = pygame.mixer.Sound(os.path.join(settings.SOUNDS_DIR, 'bangMedium_asteroids.wav'))
+        self.sound_bang_small = pygame.mixer.Sound(os.path.join(settings.SOUNDS_DIR, 'bangSmall_asteroids.wav'))
+        self.sound_saucer = pygame.mixer.Sound(os.path.join(settings.SOUNDS_DIR, 'saucerBig.wav'))
+        self.sound_extra_life = pygame.mixer.Sound(os.path.join(settings.SOUNDS_DIR, 'extraShip_asteroids.wav'))
+        self.sound_ship_explosion = pygame.mixer.Sound(os.path.join(settings.SOUNDS_DIR, 'explosion_nave.wav'))
+
     def get_event(self, event):
         if event.type == pygame.QUIT:
             self.quit = True
@@ -64,6 +75,7 @@ class AsteroidsState(BaseState):
             self.ship.rotate(1)
         if keys[pygame.K_UP] or keys[pygame.K_w]:
             self.ship.thrust()
+            self.sound_thrust.play()
             # Efecto de partículas para el thrust
             if random.random() < 0.7:
                 angle_rad = math.radians(self.ship.angle + 180)
@@ -72,6 +84,9 @@ class AsteroidsState(BaseState):
                 particle = Particle(self.ship.x, self.ship.y, YELLOW, (vx, vy), 10)
                 self.all_sprites.add(particle)
                 self.particles.add(particle)
+        else:
+            self.sound_thrust.stop()
+
 
         if not self.can_fire:
             self.fire_cooldown_timer -= 1
@@ -129,6 +144,12 @@ class AsteroidsState(BaseState):
             asteroid_hits = pygame.sprite.spritecollide(bullet, self.asteroids, False, pygame.sprite.collide_circle)
             for asteroid in asteroid_hits:
                 self.score += asteroid.points
+                if asteroid.size == "large":
+                    self.sound_bang_large.play()
+                elif asteroid.size == "medium":
+                    self.sound_bang_medium.play()
+                else:
+                    self.sound_bang_small.play()
                 self.create_explosion(asteroid.x, asteroid.y, WHITE, 20)
                 new_asteroids = asteroid.split()
                 for new_asteroid in new_asteroids:
@@ -149,6 +170,7 @@ class AsteroidsState(BaseState):
                 else:
                     self.lives -= 1
                     self.create_explosion(self.ship.x, self.ship.y, RED, 40)
+                    self.sound_ship_explosion.play()
                     if self.lives <= 0:
                         self.game_over()
                     else:
@@ -163,6 +185,7 @@ class AsteroidsState(BaseState):
                 self.active_power_ups["triple_shot"] = 300
             elif power_up.power_type == "extra_life":
                 self.lives += 1
+                self.sound_extra_life.play()
             elif power_up.power_type == "slow_time":
                 self.active_power_ups["slow_time"] = 300
             self.create_explosion(power_up.x, power_up.y, WHITE, 20)
@@ -186,6 +209,7 @@ class AsteroidsState(BaseState):
                         bullet.kill()
 
     def fire_bullet(self):
+        self.sound_fire.play()
         if self.active_power_ups["triple_shot"] > 0:
             for angle_offset in [-10, 0, 10]:
                 angle = (self.ship.angle + angle_offset) % 360
@@ -212,6 +236,7 @@ class AsteroidsState(BaseState):
             self.asteroids.add(asteroid)
 
     def spawn_ufo(self):
+        self.sound_saucer.play()
         ufo = UFO(settings.SCREEN_WIDTH, settings.SCREEN_HEIGHT)
         self.all_sprites.add(ufo)
         self.ufos.add(ufo)
@@ -244,6 +269,7 @@ class AsteroidsState(BaseState):
 
     def game_over(self):
         self.game_over_flag = True
+        self.sound_thrust.stop()
         save_manager.save_high_score("ASTEROIDS", self.score)
 
     def draw_hud(self, surface):

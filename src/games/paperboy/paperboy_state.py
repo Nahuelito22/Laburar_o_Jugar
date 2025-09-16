@@ -1,6 +1,7 @@
 # src/games/paperboy/paperboy_state.py
 import pygame
 import random
+import os
 from ...states.base_state import BaseState
 from ... import settings
 from ...components.dynamic_background import DynamicBackground
@@ -61,6 +62,12 @@ class PaperboyState(BaseState):
         pygame.mixer.music.set_volume(0.5)
         pygame.mixer.music.play(-1)
 
+        # Sound effects
+        self.sound_throw = pygame.mixer.Sound(os.path.join(settings.SOUNDS_DIR, 'space_shot.mp3'))
+        self.sound_hit_mailbox = pygame.mixer.Sound(os.path.join(settings.SOUNDS_DIR, 'point.mp3'))
+        self.sound_collision = pygame.mixer.Sound(os.path.join(settings.SOUNDS_DIR, 'explosion_nave.wav'))
+        self.sound_splat = pygame.mixer.Sound(os.path.join(settings.SOUNDS_DIR, 'alarm_clock.wav'))
+
     def aumentar_dificultad(self):
         """Aumenta la dificultad del juego."""
         self.difficulty_level += 1
@@ -94,6 +101,7 @@ class PaperboyState(BaseState):
                 self.periodicos_restantes -= 1
                 periodico = Periodico(self.player.rect.center, event.pos, self.background.speed)
                 self.projectiles.add(periodico)
+                self.sound_throw.play()
                 if event.pos[0] < self.player.rect.centerx: self.player.lanzar('throw_left')
                 else: self.player.lanzar('throw_right')
                 
@@ -117,6 +125,7 @@ class PaperboyState(BaseState):
         for periodico, _ in hits_buzon.items():
             if not periodico.acerto:
                 self.score += 10; self.periodicos_restantes += 2; periodico.acerto = True; periodico.kill()
+                self.sound_hit_mailbox.play()
         
         # --- LÓGICA DE COLISIÓN CORREGIDA ---
         # vs Obstáculos
@@ -135,6 +144,7 @@ class PaperboyState(BaseState):
         # 3. Colisiones del jugador
         if pygame.sprite.spritecollide(self.player, self.charcos, True):
             self.player.ralentizar()
+            self.sound_splat.play()
         if pygame.sprite.spritecollide(self.player, self.devueltos, True):
             self.periodicos_restantes = max(0, self.periodicos_restantes - 5)
             
@@ -149,7 +159,9 @@ class PaperboyState(BaseState):
         
         lost = False
         obstaculos_activos = [obs for obs in self.obstacles if hasattr(obs, 'is_active') and obs.is_active]
-        if self.player.hitbox.collidelist([obs.hitbox for obs in obstaculos_activos]) != -1: lost = True
+        if self.player.hitbox.collidelist([obs.hitbox for obs in obstaculos_activos]) != -1: 
+            lost = True
+            self.sound_collision.play()
         if self.periodicos_restantes <= 0 and not self.projectiles: lost = True
         
         if lost:

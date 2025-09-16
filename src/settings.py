@@ -41,3 +41,9 @@ LIGHT_GREEN = (150, 255, 150)
 LIGHT_RED = (255, 150, 150)
 
 DEBUG_MODE = True  # Cambiar a False para desactivar el modo debug
+
+# Directorios de assets
+ASSETS_DIR = resource_path("")
+IMAGES_DIR = os.path.join(ASSETS_DIR, "images")
+SOUNDS_DIR = os.path.join(ASSETS_DIR, "sounds")
+FONTS_DIR = os.path.join(ASSETS_DIR, "fonts")
