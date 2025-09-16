@@ -178,6 +178,7 @@ class AsteroidsState(BaseState):
                         else:
                             self.lives -= 1
                             self.create_explosion(self.ship.x, self.ship.y, RED, 40)
+                            self.sound_ship_explosion.play()
                             if self.lives <= 0:
                                 self.game_over()
                             else:

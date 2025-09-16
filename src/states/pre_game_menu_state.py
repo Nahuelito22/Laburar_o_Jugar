@@ -59,7 +59,7 @@ class PreGameMenuState(BaseState):
         # --- Dibuja el contenido del menú ---
         popup_rect = pygame.Rect(0, 0, 1200, 600)
         popup_rect.center = settings.SCREEN_CENTER
-        pygame.draw.rect(surface, (20, 20, 50), popup_rect, border_radius=15)
+        pygame.draw.rect(surface, settings.DARK_BLUE, popup_rect, border_radius=15)
         pygame.draw.rect(surface, settings.WHITE, popup_rect, 3, border_radius=15)
 
         # Título del juego
@@ -87,10 +87,10 @@ class PreGameMenuState(BaseState):
 
         if self.fichas > 0:
             prompt_text = "Presiona ENTER para Jugar (1 Ficha)"
-            prompt_color = (150, 255, 150)
+            prompt_color = settings.LIGHT_GREEN
         else:
             prompt_text = "¡Necesitas Fichas!"
-            prompt_color = (255, 150, 150)
+            prompt_color = settings.LIGHT_RED
         
         prompt_surf = self.font_info.render(prompt_text, True, prompt_color)
         surface.blit(prompt_surf, prompt_surf.get_rect(centerx=popup_rect.centerx, y=popup_rect.bottom - 100))

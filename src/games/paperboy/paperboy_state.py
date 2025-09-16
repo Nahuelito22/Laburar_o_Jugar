@@ -4,16 +4,6 @@ import random
 from ...states.base_state import BaseState
 from ... import settings
 from ...components.dynamic_background import DynamicBackground
-from .entities import PlayerPaperboy, Buzon, Auto, Periodico, Casa
-from ... import save_manager
-
-
-# src/games/paperboy/paperboy_state.py
-import pygame
-import random
-from ...states.base_state import BaseState
-from ... import settings
-from ...components.dynamic_background import DynamicBackground
 from .entities import PlayerPaperboy, Buzon, Auto, Periodico, Casa, ManchaAceite, PeriodicoDevuelto
 from ... import save_manager
 
@@ -22,6 +12,7 @@ class PaperboyState(BaseState):
         super().__init__()
         self.next_state = "HUB"
         self.background = DynamicBackground(speed=300)
+        self.music_path = settings.resource_path("sounds/Paperboy_sounds.mp3")
         
         # --- Grupos de Sprites ---
         self.player_group = pygame.sprite.GroupSingle()
@@ -66,6 +57,9 @@ class PaperboyState(BaseState):
         super().startup(persistent)
         self.fichas = self.persistent.get('fichas', 0)
         self.dinero_total_inicial = self.persistent.get('dinero_total', 0)
+        pygame.mixer.music.load(self.music_path)
+        pygame.mixer.music.set_volume(0.5)
+        pygame.mixer.music.play(-1)
 
     def aumentar_dificultad(self):
         """Aumenta la dificultad del juego."""
@@ -196,3 +190,7 @@ class PaperboyState(BaseState):
             for sprite in all_drawable_sprites:
                 if hasattr(sprite, 'hitbox'):
                     pygame.draw.rect(surface, (0, 255, 0), sprite.hitbox, 2)
+
+    def cleanup(self):
+        pygame.mixer.music.stop()
+        return super().cleanup()

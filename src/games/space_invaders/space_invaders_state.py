@@ -140,6 +140,7 @@ class SpaceInvadersState(BaseState):
     def trigger_game_over(self):
         if not self.game_over:
             self.game_over = True
+            save_manager.save_high_score("SF", self.score)
             self.sonido_nave_exp.play()
             pygame.mixer.music.stop()
             explosion = Explosion(self.nave.rect.center, self.imagenes_explosion)
