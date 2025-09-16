@@ -30,6 +30,7 @@ ROTATION_SPEED = 3.5
 BULLET_SPEED = 10.0
 BULLET_LIFETIME = 60  # frames
 FIRE_COOLDOWN = 12  # frames
+BULLET_GRACE_PERIOD = 5  # frames de gracia para no colisionar con la nave
 
 # Tamaños de asteroides (radio, puntos)
 ASTEROID_SIZES = {
@@ -173,13 +174,15 @@ class Ship(pygame.sprite.Sprite):
 
 # Clase para las balas
 class Bullet(pygame.sprite.Sprite):
-    def __init__(self, x, y, angle):
+    def __init__(self, x, y, angle, owner="player"):
         super().__init__()
         self.x = x
         self.y = y
         self.angle = angle
         self.radius = 3
         self.lifetime = BULLET_LIFETIME
+        self.owner = owner
+        self.frames_alive = 0  # Para el tiempo de gracia
         
         # Calcular velocidad
         angle_rad = math.radians(angle)
@@ -194,6 +197,7 @@ class Bullet(pygame.sprite.Sprite):
         self.x += self.vx
         self.y += self.vy
         self.lifetime -= 1
+        self.frames_alive += 1
         
         # Wrap-around
         if self.x < 0:
@@ -653,12 +657,12 @@ class AsteroidsGame:
             # Triple disparo
             for angle_offset in [-10, 0, 10]:
                 angle = (self.ship.angle + angle_offset) % 360
-                bullet = Bullet(self.ship.x, self.ship.y, angle)
+                bullet = Bullet(self.ship.x, self.ship.y, angle, owner="player")
                 self.all_sprites.add(bullet)
                 self.bullets.add(bullet)
         else:
             # Disparo normal
-            bullet = Bullet(self.ship.x, self.ship.y, self.ship.angle)
+            bullet = Bullet(self.ship.x, self.ship.y, self.ship.angle, owner="player")
             self.all_sprites.add(bullet)
             self.bullets.add(bullet)
         
@@ -672,6 +676,22 @@ class AsteroidsGame:
     def update(self):
         if self.state != GameState.PLAYING:
             return
+        
+        # Guardar velocidades originales de asteroides y ovnis para el power-up de tiempo lento
+        original_speeds = {}
+        for asteroid in self.asteroids:
+            original_speeds[asteroid] = (asteroid.vx, asteroid.vy)
+        for ufo in self.ufos:
+            original_speeds[ufo] = (ufo.vx, ufo.vy)
+        
+        # Aplicar efecto de tiempo lento si está activo
+        if self.active_power_ups["slow_time"] > 0:
+            for asteroid in self.asteroids:
+                asteroid.vx *= 0.5
+                asteroid.vy *= 0.5
+            for ufo in self.ufos:
+                ufo.vx *= 0.5
+                ufo.vy *= 0.5
         
         # Obtener teclas presionadas
         keys = pygame.key.get_pressed()
@@ -703,6 +723,12 @@ class AsteroidsGame:
         # Actualizar todos los sprites
         self.all_sprites.update()
         
+        # Restaurar velocidades originales después de aplicar el efecto de tiempo lento
+        for obj, (vx, vy) in original_speeds.items():
+            if obj in self.all_sprites:  # Verificar que el objeto aún existe
+                obj.vx = vx
+                obj.vy = vy
+        
         # Actualizar power-ups activos
         for power in self.active_power_ups:
             if self.active_power_ups[power] > 0:
@@ -712,6 +738,10 @@ class AsteroidsGame:
         
         # Balas con asteroides
         for bullet in self.bullets:
+            # Ignorar balas del jugador durante el período de gracia
+            if bullet.owner == "player" and bullet.frames_alive < BULLET_GRACE_PERIOD:
+                continue
+                
             asteroid_hits = pygame.sprite.spritecollide(bullet, self.asteroids, False, pygame.sprite.collide_circle)
             for asteroid in asteroid_hits:
                 # Añadir puntuación
@@ -776,8 +806,11 @@ class AsteroidsGame:
                 self.active_power_ups["slow_time"] = 300  # 5 segundos a 60 FPS
                 self.create_explosion(power_up.x, power_up.y, MAGENTA, 20)
         
-        # Balas con ovnis
+        # Balas con ovnis (solo balas del jugador)
         for bullet in self.bullets:
+            if bullet.owner != "player":
+                continue
+                
             ufo_hits = pygame.sprite.spritecollide(bullet, self.ufos, False, pygame.sprite.collide_circle)
             for ufo in ufo_hits:
                 # Añadir puntuación
@@ -826,17 +859,17 @@ class AsteroidsGame:
                 angle = ufo.get_shoot_direction(self.ship.x, self.ship.y)
                 
                 # Crear bala
-                bullet = Bullet(ufo.x, ufo.y, angle)
+                bullet = Bullet(ufo.x, ufo.y, angle, owner="ufo")
                 self.all_sprites.add(bullet)
                 self.bullets.add(bullet)
         
-        # Balas de ovnis con la nave
+        # Balas de ovnis con la nave (solo balas de ovnis)
         if not self.ship.invulnerable:
             for bullet in self.bullets:
-                # Comprobar si la bala es de un ovni (no de la nave)
-                if bullet not in self.all_sprites:
+                if bullet.owner != "ufo":
                     continue
                 
+                # Comprobar si la bala es de un ovni (no de la nave)
                 # Calcular distancia a la nave
                 dx = bullet.x - self.ship.x
                 dy = bullet.y - self.ship.y
@@ -886,15 +919,6 @@ class AsteroidsGame:
             y = random.randint(50, SCREEN_HEIGHT - 50)
             self.spawn_power_up(x, y)
             self.power_up_spawn_timer = random.randint(900, 1800)  # 15-30 segundos
-        
-        # Aplicar efecto de tiempo lento
-        if self.active_power_ups["slow_time"] > 0:
-            # Reducir la velocidad de los asteroides y ovnis
-            for asteroid in self.asteroids:
-                asteroid.vx *= 0.5
-                asteroid.vy *= 0.5
-            for ufo in self.ufos:
-                ufo.vx *= 0.5
     
     def game_over(self):
         self.state = GameState.GAME_OVER
