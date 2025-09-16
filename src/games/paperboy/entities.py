@@ -93,22 +93,16 @@ class PlayerPaperboy(pygame.sprite.Sprite):
             self.current_frame = 0
 
 class Buzon(pygame.sprite.Sprite):
-    def __init__(self, scroll_speed, limite_izq_buzon, limite_der_buzon):
+    def __init__(self, x, y, scroll_speed, lado): # <-- Acepta una posición y lado
         super().__init__()
         colores = ["blue", "green", "red", "yellow"]
-        lado = random.choice(["izquierda", "derecha"])
-        
         img_path = f"images/mailbox_{random.choice(colores)}.png"
         self.image = pygame.image.load(settings.resource_path(img_path)).convert_alpha()
         self.image = pygame.transform.scale(self.image, (BUZON_WIDTH, BUZON_HEIGHT))
         
         if lado == "izquierda":
             self.image = pygame.transform.flip(self.image, True, False)
-            x = random.randint(limite_izq_buzon - 80, limite_izq_buzon - 20)
-        else:
-            x = random.randint(limite_der_buzon + 20, limite_der_buzon + 80)
             
-        y = random.randint(-200, -100)
         self.rect = self.image.get_rect(center=(x, y))
         self.scroll_speed = scroll_speed
 
@@ -117,8 +111,69 @@ class Buzon(pygame.sprite.Sprite):
         if self.rect.top > settings.SCREEN_HEIGHT:
             self.kill()
 
+class Casa(pygame.sprite.Sprite):
+    def __init__(self, scroll_speed, limite_cesped_izq, limite_cesped_der):
+        super().__init__()
+        
+        # --- LÓGICA DE DIBUJO PROCEDURAL ---
+        ancho_casa = random.randint(150, 250)
+        alto_casa = random.randint(150, 250)
+        self.image = pygame.Surface((ancho_casa, alto_casa), pygame.SRCALPHA)
+        
+        # Colores
+        color_pared = (139, 69, 19)
+        color_techo_base = (128, 0, 0)
+        color_techo_ladrillo = (100, 0, 0) # Ladrillos un poco más oscuros
+
+        # Dibujamos el cuerpo de la casa (solo se verá una parte)
+        pygame.draw.rect(self.image, color_pared, (0, 0, ancho_casa, alto_casa))
+        
+        # Dibujamos el techo de ladrillos
+        alto_techo = int(alto_casa * 0.8) # El techo ocupa el 80% superior
+        techo_rect = pygame.Rect(0, 0, ancho_casa, alto_techo)
+        pygame.draw.rect(self.image, color_techo_base, techo_rect)
+        
+        tam_ladrillo = 20
+        for y in range(0, alto_techo, tam_ladrillo):
+            for x in range(0, ancho_casa, tam_ladrillo):
+                # Desfasamos las filas pares para el efecto de ladrillo
+                offset = tam_ladrillo // 2 if (y // tam_ladrillo) % 2 == 0 else 0
+                ladrillo = pygame.Rect(x + offset, y, tam_ladrillo, tam_ladrillo)
+                pygame.draw.rect(self.image, color_techo_ladrillo, ladrillo, 1) # Borde de 1px
+
+        # --- Posicionamiento de la casa ---
+        self.rect = self.image.get_rect()
+        lado = random.choice(["izquierda", "derecha"])
+        if lado == "izquierda":
+            # Aparece en el césped izquierdo, asomando desde el borde
+            self.rect.right = random.randint(20, limite_cesped_izq - 20)
+        else:
+            # Aparece en el césped derecho, asomando desde el borde
+            self.rect.left = random.randint(limite_cesped_der + 20, settings.SCREEN_WIDTH - 20)
+
+        # Hacemos que solo asome el techo al principio
+        self.rect.bottom = random.randint(-50, 0)
+        self.scroll_speed = scroll_speed
+        
+        # --- NUEVO: La casa crea su propio buzón ---
+        buzon_y = self.rect.bottom - 40 # Cerca de la base de la casa
+        if lado == "izquierda":
+            buzon_x = self.rect.right + BUZON_WIDTH / 2
+        else:
+            buzon_x = self.rect.left - BUZON_WIDTH / 2
+        
+        self.buzon = Buzon(buzon_x, buzon_y, scroll_speed, lado)
+
+    def update(self, dt):
+        self.rect.y += self.scroll_speed * dt
+        # El buzón se mueve junto con la casa
+        self.buzon.rect.y += self.scroll_speed * dt
+        if self.rect.top > settings.SCREEN_HEIGHT:
+            self.kill()
+            self.buzon.kill() # También eliminamos su buzón
+
 class Auto(pygame.sprite.Sprite):
-    def __init__(self, scroll_speed):
+    def __init__(self, scroll_speed, limite_izq_calle, limite_der_calle): # <-- Acepta los límites
         super().__init__()
         tipos_de_vehiculos = [
             {'nombre': 'car_blue', 'height': 400, 'num_frames': 2},
@@ -146,7 +201,8 @@ class Auto(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.hitbox = self.rect.inflate(-self.rect.width * 0.7, -self.rect.height * 0.3)
         
-        x = random.randint(350, 900)
+        # Ahora el auto aparece dentro de los límites de la calle
+        x = random.randint(limite_izq_calle + self.rect.width // 2, limite_der_calle - self.rect.width // 2)
         y = random.randint(-600, -300)
         self.rect.center = (x, y)
         self.hitbox.center = self.rect.center

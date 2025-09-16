@@ -3,8 +3,8 @@ import pygame
 import random
 from ...states.base_state import BaseState
 from ... import settings
-from ...components.scrolling_background import ScrollingBackground
-from .entities import PlayerPaperboy, Buzon, Auto, Periodico
+from ...components.dynamic_background import DynamicBackground # <-- Importamos la nueva clase de fondo
+from .entities import PlayerPaperboy, Buzon, Auto, Periodico, Casa # <-- Importamos la nueva clase Casa
 from ... import save_manager
 
 class PaperboyState(BaseState):
@@ -12,34 +12,40 @@ class PaperboyState(BaseState):
         super().__init__()
         self.next_state = "HUB"
         
-        self.background = ScrollingBackground(
-            image_path=settings.resource_path("images/paperboy_level_strip.png"), 
-            speed=300
-        )
+        # --- Usamos el fondo dinámico ---
+        self.background = DynamicBackground(speed=300)
         
+        # --- Grupos de Sprites ---
         self.all_sprites = pygame.sprite.Group()
+        self.player_group = pygame.sprite.GroupSingle() # Grupo solo para el jugador
         self.obstacles = pygame.sprite.Group()
-        self.targets = pygame.sprite.Group()
+        self.targets = pygame.sprite.Group()     # Aquí irán los buzones
         self.projectiles = pygame.sprite.Group()
+        self.scenery = pygame.sprite.Group()     # Aquí irán las casas
 
+        # --- Creamos al jugador ---
         self.player = PlayerPaperboy()
-        self.all_sprites.add(self.player)
+        self.player_group.add(self.player) # Lo añadimos a su propio grupo
         
+        # --- Variables de juego ---
         self.score = 0
         self.periodicos_restantes = 10
         self.fichas = 0
         self.dinero_total_inicial = 0 
 
-        self.buzon_limite_izq = 450
-        self.buzon_limite_der = 860
+        # --- Límites Dinámicos (basados en el nuevo fondo) ---
+        self.player.limite_izquierdo = self.background.calle.left
+        self.player.limite_derecho = self.background.calle.right
+        self.buzon_limite_cesped_izq = self.background.vereda_izq.left
+        self.buzon_limite_cesped_der = self.background.vereda_der.right
 
-        self.SPAWN_BUZON_EVENT = pygame.USEREVENT + 1
-        pygame.time.set_timer(self.SPAWN_BUZON_EVENT, 2500)
+        # --- Sistema de Spawning Actualizado ---
+        self.SPAWN_CASA_EVENT = pygame.USEREVENT + 1 # Ahora generamos casas (que tienen buzones)
+        pygame.time.set_timer(self.SPAWN_CASA_EVENT, 1500)
         self.SPAWN_AUTO_EVENT = pygame.USEREVENT + 2
         pygame.time.set_timer(self.SPAWN_AUTO_EVENT, 3500)
     
     def startup(self, persistent):
-        """Al entrar, recibimos y guardamos los datos de la sesión."""
         super().startup(persistent)
         self.fichas = self.persistent.get('fichas', 0)
         self.dinero_total_inicial = self.persistent.get('dinero_total', 0)
@@ -50,21 +56,20 @@ class PaperboyState(BaseState):
         if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
             self.done = True
         
-        if event.type == self.SPAWN_BUZON_EVENT:
-            buzon = Buzon(self.background.speed_y, self.buzon_limite_izq, self.buzon_limite_der)
-            self.all_sprites.add(buzon)
-            self.targets.add(buzon)
-
+        # --- Spawning de Casas y Autos ---
+        if event.type == self.SPAWN_CASA_EVENT:
+            casa = Casa(self.background.speed, self.buzon_limite_cesped_izq, self.buzon_limite_cesped_der)
+            self.scenery.add(casa)
+            self.targets.add(casa.buzon) # El buzón de la casa es el objetivo
+        
         if event.type == self.SPAWN_AUTO_EVENT:
-            auto = Auto(self.background.speed_y)
-            self.all_sprites.add(auto)
+            auto = Auto(self.background.speed, self.player.limite_izquierdo, self.player.limite_derecho)
             self.obstacles.add(auto)
 
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             if self.periodicos_restantes > 0:
                 self.periodicos_restantes -= 1
-                periodico = Periodico(self.player.rect.center, event.pos, self.background.speed_y)
-                self.all_sprites.add(periodico)
+                periodico = Periodico(self.player.rect.center, event.pos, self.background.speed)
                 self.projectiles.add(periodico)
                 if event.pos[0] < self.player.rect.centerx:
                     self.player.lanzar('throw_left')
@@ -73,7 +78,12 @@ class PaperboyState(BaseState):
 
     def update(self, dt):
         self.background.update(dt)
-        self.all_sprites.update(dt)
+        # Actualizamos los grupos por separado para controlar el orden
+        self.scenery.update(dt)
+        self.targets.update(dt)
+        self.obstacles.update(dt)
+        self.player_group.update(dt)
+        self.projectiles.update(dt)
 
         # Lógica de Puntuación y Penalización
         hits = pygame.sprite.groupcollide(self.projectiles, self.targets, False, True)
@@ -112,14 +122,19 @@ class PaperboyState(BaseState):
             if self.score > save_data.get('high_score', 0):
                 save_data['high_score'] = self.score
             save_manager.save_data(save_data)
-            
             self.persistent['last_score'] = self.score
             self.done = True
             self.next_state = "GAME_OVER"
 
     def draw(self, surface):
         self.background.draw(surface)
-        self.all_sprites.draw(surface)
+        
+        # --- Dibujado por Capas ---
+        self.scenery.draw(surface)
+        self.targets.draw(surface)
+        self.obstacles.draw(surface)
+        self.player_group.draw(surface)
+        self.projectiles.draw(surface)
         
         # HUD
         font = pygame.font.Font(None, 50)
@@ -130,10 +145,11 @@ class PaperboyState(BaseState):
 
         # DEBUG
         if settings.DEBUG_MODE:
+            # Límites del jugador (Rojo)
             pygame.draw.line(surface, (255, 0, 0), (self.player.limite_izquierdo, 0), (self.player.limite_izquierdo, settings.SCREEN_HEIGHT), 2)
-            pygame.draw.line(surface, (255, 0, 0), (self.player.limite_derecho, 0), (self.player.limite_derecho, settings.SCREEN_HEIGHT), 2)
-            pygame.draw.line(surface, (0, 0, 255), (self.buzon_limite_izq, 0), (self.buzon_limite_izq, settings.SCREEN_HEIGHT), 2)
-            pygame.draw.line(surface, (0, 0, 255), (self.buzon_limite_der, 0), (self.buzon_limite_der, settings.SCREEN_HEIGHT), 2)
-            for sprite in self.all_sprites:
-                if hasattr(sprite, 'hitbox'):
-                    pygame.draw.rect(surface, (0, 255, 0), sprite.hitbox, 2)
+            pygame.draw.line(surface, (255, 0, 0), (self.player.limite_derecho, 0), (self.player.limite_derecho, settings.SCREEN_HEIGHT), 2)            
+            # Hitbox de todos los sprites (Verde)
+            # Dibujamos los hitboxes de todos los sprites que están en los grupos relevantes
+            for sprite in self.player_group: pygame.draw.rect(surface, (0, 255, 0), sprite.hitbox, 2)
+            for sprite in self.obstacles: 
+                if hasattr(sprite, 'hitbox'): pygame.draw.rect(surface, (0, 255, 0), sprite.hitbox, 2)
