@@ -9,10 +9,7 @@ class PongState(BaseState):
         super().__init__()
         self.next_state = "ARCADE"
         
-        # --- Carga de Assets ---
-        self.fondo = pygame.image.load(settings.resource_path("images/fondo_pong.jpg")).convert()
-        self.fondo = pygame.transform.scale(self.fondo, settings.SCREEN_SIZE)
-        
+        # --- Carga de Sonidos ---
         self.golpe_p1_sound = pygame.mixer.Sound(settings.resource_path("sounds/pongP1.wav"))
         self.golpe_p2_sound = pygame.mixer.Sound(settings.resource_path("sounds/pongP2.wav"))
         self.point_sound = pygame.mixer.Sound(settings.resource_path('sounds/point.mp3'))
@@ -32,6 +29,11 @@ class PongState(BaseState):
         # --- Lógica de Modos de Juego ---
         self.game_mode = "MENU"
         self.bot_speed = 6
+        
+        # --- Variables para el fondo dinámico ---
+        self.hit_counter = 0
+        self.max_hits_for_color_change = 20
+        self.line_color = settings.WHITE
 
     def startup(self, persistent):
         super().startup(persistent)
@@ -46,6 +48,8 @@ class PongState(BaseState):
         self.pelota_speed_y = 7 * random.choice((1, -1))
 
     def reset_game(self):
+        self.hit_counter = 0
+        self.line_color = settings.WHITE
         self.player1.y = settings.SCREEN_HEIGHT / 2 - 45
         self.player2.y = settings.SCREEN_HEIGHT / 2 - 45
         self.reset_ball()
@@ -59,7 +63,6 @@ class PongState(BaseState):
     def get_event(self, event):
         if event.type == pygame.QUIT:
             self.quit = True
-        
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
                 self.done = True
@@ -87,6 +90,12 @@ class PongState(BaseState):
                 if self.game_mode == "JVSJ":
                     if event.key == pygame.K_UP or event.key == pygame.K_DOWN: self.player2_speed = 0
 
+    def actualizar_color_linea(self):
+        self.hit_counter += 1
+        ratio = min(self.hit_counter / self.max_hits_for_color_change, 1.0)
+        gb_value = int(255 * (1 - ratio))
+        self.line_color = (255, gb_value, gb_value)
+
     def update(self, dt):
         if self.pausa or self.winner_text or self.game_mode == "MENU":
             return
@@ -106,26 +115,45 @@ class PongState(BaseState):
         self.pelota.x += self.pelota_speed_x
         self.pelota.y += self.pelota_speed_y
         
-        if self.pelota.top <= 0 or self.pelota.bottom >= settings.SCREEN_HEIGHT: self.pelota_speed_y *= -1
+        if self.pelota.top <= 0 or self.pelota.bottom >= settings.SCREEN_HEIGHT:
+            self.pelota_speed_y *= -1
+        
         if self.pelota.colliderect(self.player1) and self.pelota_speed_x < 0:
-            self.pelota_speed_x *= -1.1; self.golpe_p1_sound.play()
+            self.pelota_speed_x *= -1.1
+            self.golpe_p1_sound.play()
+            self.actualizar_color_linea()
         if self.pelota.colliderect(self.player2) and self.pelota_speed_x > 0:
-            self.pelota_speed_x *= -1.1; self.golpe_p2_sound.play()
+            self.pelota_speed_x *= -1.1
+            self.golpe_p2_sound.play()
+            self.actualizar_color_linea()
             
         if self.pelota.left <= 0:
-            self.puntos_jugador2 += 1; self.point_sound.play(); self.reset_ball(1)
+            self.puntos_jugador2 += 1
+            self.point_sound.play()
+            self.reset_ball(1)
         if self.pelota.right >= settings.SCREEN_WIDTH:
-            self.puntos_jugador1 += 1; self.point_sound.play(); self.reset_ball(-1)
+            self.puntos_jugador1 += 1
+            self.point_sound.play()
+            self.reset_ball(-1)
         
         if self.puntos_jugador1 >= 7: self.winner_text = "¡Ganó el Jugador 1!"
         if self.puntos_jugador2 >= 7: self.winner_text = "¡Ganó CPU!" if self.game_mode == "CPUVSJ" else "¡Ganó el Jugador 2!"
 
     def draw(self, surface):
-        surface.blit(self.fondo, (0,0))
+        surface.fill(settings.BLACK)
+        
+        # Dibuja la línea de guiones en el centro con el color dinámico
+        line_width = 5
+        dash_height = 20
+        gap_height = 15
+        for y in range(0, settings.SCREEN_HEIGHT, dash_height + gap_height):
+            start_pos = (settings.SCREEN_WIDTH / 2 - line_width / 2, y)
+            end_pos = (settings.SCREEN_WIDTH / 2 - line_width / 2, y + dash_height)
+            pygame.draw.line(surface, self.line_color, start_pos, end_pos, line_width)
+            
         pygame.draw.rect(surface, settings.WHITE, self.player1)
         pygame.draw.rect(surface, settings.WHITE, self.player2)
         pygame.draw.ellipse(surface, settings.WHITE, self.pelota)
-        pygame.draw.aaline(surface, settings.WHITE, (settings.SCREEN_WIDTH/2, 0), (settings.SCREEN_WIDTH/2, settings.SCREEN_HEIGHT))
 
         texto1 = self.score_font.render(str(self.puntos_jugador1), True, settings.WHITE)
         texto2 = self.score_font.render(str(self.puntos_jugador2), True, settings.WHITE)
