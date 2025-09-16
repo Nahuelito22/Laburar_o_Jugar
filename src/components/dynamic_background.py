@@ -23,6 +23,8 @@ class DynamicBackground:
         self.vereda_izq = pygame.Rect(self.cesped_izq.right, 0, ancho_vereda, settings.SCREEN_HEIGHT)
         self.calle = pygame.Rect(self.vereda_izq.right, 0, ancho_calle, settings.SCREEN_HEIGHT)
         self.vereda_der = pygame.Rect(self.calle.right, 0, ancho_vereda, settings.SCREEN_HEIGHT)
+        # --- LÍNEA AÑADIDA ---
+        self.cesped_der = pygame.Rect(self.vereda_der.right, 0, ancho_cesped, settings.SCREEN_HEIGHT)
         
         # --- Líneas de la Calle (la parte que se mueve) ---
         self.lineas = []

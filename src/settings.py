@@ -22,6 +22,7 @@ def resource_path(relative_path):
 SCREEN_WIDTH = 1280
 SCREEN_HEIGHT = 720
 SCREEN_SIZE = (SCREEN_WIDTH, SCREEN_HEIGHT)
+SCREEN_CENTER = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
 
 # Fotogramas por segundo
 FPS = 60
@@ -29,5 +30,20 @@ FPS = 60
 # Colores (en formato RGB)
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
+RED = (255, 0, 0)
+GREEN = (0, 255, 0)
+BLUE = (0, 0, 255)
+YELLOW = (255, 255, 0)
+CYAN = (0, 255, 255)
+MAGENTA = (255, 0, 255)
+DARK_BLUE = (20, 20, 50)
+LIGHT_GREEN = (150, 255, 150)
+LIGHT_RED = (255, 150, 150)
 
 DEBUG_MODE = True  # Cambiar a False para desactivar el modo debug
+
+# Directorios de assets
+ASSETS_DIR = resource_path("")
+IMAGES_DIR = os.path.join(ASSETS_DIR, "images")
+SOUNDS_DIR = os.path.join(ASSETS_DIR, "sounds")
+FONTS_DIR = os.path.join(ASSETS_DIR, "fonts")

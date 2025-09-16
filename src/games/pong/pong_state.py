@@ -3,44 +3,38 @@ import pygame
 import random
 from ...states.base_state import BaseState
 from ... import settings
+from ... import save_manager
 
 class PongState(BaseState):
     def __init__(self):
         super().__init__()
         self.next_state = "ARCADE"
         
-        # --- Carga de Sonidos ---
         self.golpe_p1_sound = pygame.mixer.Sound(settings.resource_path("sounds/pongP1.wav"))
         self.golpe_p2_sound = pygame.mixer.Sound(settings.resource_path("sounds/pongP2.wav"))
         self.point_sound = pygame.mixer.Sound(settings.resource_path('sounds/point.mp3'))
         self.music_path = settings.resource_path("sounds/music_pong.mp3")
 
-        # --- Fuentes ---
-        self.menu_font = pygame.font.Font(None, 70)
         self.score_font = pygame.font.Font(None, 100)
         self.pause_font = pygame.font.Font(None, 60)
         self.winner_font = pygame.font.Font(None, 80)
         
-        # --- Objetos del Juego ---
         self.player1 = pygame.Rect(50, settings.SCREEN_HEIGHT / 2 - 45, 15, 90)
         self.player2 = pygame.Rect(settings.SCREEN_WIDTH - 65, settings.SCREEN_HEIGHT / 2 - 45, 15, 90)
         self.pelota = pygame.Rect(settings.SCREEN_WIDTH / 2 - 10, settings.SCREEN_HEIGHT / 2 - 10, 20, 20)
         
-        # --- Lógica de Modos de Juego ---
-        self.game_mode = "MENU"
         self.bot_speed = 6
-        
-        # --- Variables para el fondo dinámico ---
         self.hit_counter = 0
         self.max_hits_for_color_change = 20
         self.line_color = settings.WHITE
 
     def startup(self, persistent):
         super().startup(persistent)
-        self.game_mode = "MENU"
+        self.game_mode = self.persistent.get('game_mode', 'Jugador vs CPU')
         self.reset_game()
         pygame.mixer.music.load(self.music_path)
         pygame.mixer.music.set_volume(0.5)
+        pygame.mixer.music.play(-1)
 
     def reset_ball(self, direction=1):
         self.pelota.center = (settings.SCREEN_WIDTH / 2, settings.SCREEN_HEIGHT / 2)
@@ -67,27 +61,19 @@ class PongState(BaseState):
             if event.key == pygame.K_ESCAPE:
                 self.done = True
             
-            if self.game_mode == "MENU":
-                if event.key == pygame.K_1:
-                    self.game_mode = "JVSJ"
-                    pygame.mixer.music.play(-1)
-                if event.key == pygame.K_2:
-                    self.game_mode = "CPUVSJ"
-                    pygame.mixer.music.play(-1)
-            
-            elif not self.winner_text:
+            if not self.winner_text:
                 if event.key == pygame.K_p:
                     self.pausa = not self.pausa
                 if event.key == pygame.K_w: self.player1_speed = -7
                 if event.key == pygame.K_s: self.player1_speed = 7
-                if self.game_mode == "JVSJ":
+                if self.game_mode == "Jugador vs Jugador":
                     if event.key == pygame.K_UP: self.player2_speed = -7
                     if event.key == pygame.K_DOWN: self.player2_speed = 7
         
         if event.type == pygame.KEYUP:
             if not self.winner_text:
                 if event.key == pygame.K_w or event.key == pygame.K_s: self.player1_speed = 0
-                if self.game_mode == "JVSJ":
+                if self.game_mode == "Jugador vs Jugador":
                     if event.key == pygame.K_UP or event.key == pygame.K_DOWN: self.player2_speed = 0
 
     def actualizar_color_linea(self):
@@ -97,13 +83,13 @@ class PongState(BaseState):
         self.line_color = (255, gb_value, gb_value)
 
     def update(self, dt):
-        if self.pausa or self.winner_text or self.game_mode == "MENU":
+        if self.pausa or self.winner_text:
             return
 
         self.player1.y += self.player1_speed
-        if self.game_mode == "JVSJ":
+        if self.game_mode == "Jugador vs Jugador":
             self.player2.y += self.player2_speed
-        elif self.game_mode == "CPUVSJ":
+        elif self.game_mode == "Jugador vs CPU":
             if self.player2.centery < self.pelota.centery: self.player2.y += self.bot_speed
             if self.player2.centery > self.pelota.centery: self.player2.y -= self.bot_speed
 
@@ -136,13 +122,17 @@ class PongState(BaseState):
             self.point_sound.play()
             self.reset_ball(-1)
         
-        if self.puntos_jugador1 >= 7: self.winner_text = "¡Ganó el Jugador 1!"
-        if self.puntos_jugador2 >= 7: self.winner_text = "¡Ganó CPU!" if self.game_mode == "CPUVSJ" else "¡Ganó el Jugador 2!"
+        if self.puntos_jugador1 >= 7:
+            self.winner_text = "¡Ganó el Jugador 1!"
+            if self.game_mode == "Jugador vs CPU":
+                save_manager.save_high_score("PONG", self.puntos_jugador1)
+
+        if self.puntos_jugador2 >= 7: 
+            self.winner_text = "¡Ganó CPU!" if self.game_mode == "Jugador vs CPU" else "¡Ganó el Jugador 2!"
 
     def draw(self, surface):
         surface.fill(settings.BLACK)
         
-        # Dibuja la línea de guiones en el centro con el color dinámico
         line_width = 5
         dash_height = 20
         gap_height = 15
@@ -160,15 +150,6 @@ class PongState(BaseState):
         surface.blit(texto1, (settings.SCREEN_WIDTH/4, 20))
         surface.blit(texto2, (settings.SCREEN_WIDTH * 3/4 - texto2.get_width(), 20))
         
-        if self.game_mode == "MENU":
-            dim_surface = pygame.Surface(settings.SCREEN_SIZE)
-            dim_surface.set_alpha(200); dim_surface.fill(settings.BLACK)
-            surface.blit(dim_surface, (0,0))
-            texto_menu1 = self.menu_font.render("Presiona 1 para JUGADOR vs JUGADOR", True, settings.WHITE)
-            texto_menu2 = self.menu_font.render("Presiona 2 para JUGADOR vs CPU", True, settings.WHITE)
-            surface.blit(texto_menu1, texto_menu1.get_rect(center=(settings.SCREEN_WIDTH/2, settings.SCREEN_HEIGHT/2 - 50)))
-            surface.blit(texto_menu2, texto_menu2.get_rect(center=(settings.SCREEN_WIDTH/2, settings.SCREEN_HEIGHT/2 + 50)))
-
         if self.pausa:
             texto_pausa = self.pause_font.render("PAUSA", True, settings.WHITE)
             surface.blit(texto_pausa, texto_pausa.get_rect(center=(settings.SCREEN_WIDTH/2, settings.SCREEN_HEIGHT/2)))
