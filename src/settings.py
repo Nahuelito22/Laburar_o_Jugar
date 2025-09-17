@@ -40,7 +40,7 @@ DARK_BLUE = (20, 20, 50)
 LIGHT_GREEN = (150, 255, 150)
 LIGHT_RED = (255, 150, 150)
 
-DEBUG_MODE = True  # Cambiar a False para desactivar el modo debug
+DEBUG_MODE = False  # Cambiar a False para desactivar el modo debug
 
 # Directorios de assets
 ASSETS_DIR = resource_path("")
