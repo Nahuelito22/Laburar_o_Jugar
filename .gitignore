@@ -32,3 +32,7 @@ Thumbs.db   # Windows
 
 # Archivos de documentacion generados
 estructura_directorio.txt
+
+#Ignorar release
+dist/
+build/
