@@ -39,3 +39,7 @@ dist/Laburar o Jugar/
 build/
 Laburar o Jugar.spec
 Laburar o Jugar.exe
+
+# No cargar savemanager
+savegame.json
+ASTEROIDS_scores.json
