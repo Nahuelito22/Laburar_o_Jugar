@@ -32,3 +32,10 @@ Thumbs.db   # Windows
 
 # Archivos de documentacion generados
 estructura_directorio.txt
+
+#Ignorar release
+dist/
+dist/Laburar o Jugar/
+build/
+Laburar o Jugar.spec
+Laburar o Jugar.exe

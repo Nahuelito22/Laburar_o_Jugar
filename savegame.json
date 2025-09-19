@@ -1,1 +1,10 @@
+<<<<<<< HEAD
 {"nombre_usuario": "..", "high_score": 0, "dinero_total": 0, "fichas": 0}
+=======
+{
+    "nombre_usuario": "nahuel",
+    "high_score": 313,
+    "dinero_total": 2060,
+    "fichas": 100
+}
+>>>>>>> e5ecc66f9f7ca425bb4e03eb79ec826366314ef7
