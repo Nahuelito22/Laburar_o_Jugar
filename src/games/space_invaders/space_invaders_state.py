@@ -1,52 +1,66 @@
+# src/games/space_invaders/space_invaders_state.py
 import pygame
 import random
 from ...states.base_state import BaseState
 from ... import settings
 from .entities import Nave, Disparo, Enemigo, Explosion, Estrella, Asteroide, EnemigoDisparo
+from ... import save_manager  # <--- 1. IMPORTACIÓN AGREGADA
 
 class SpaceInvadersState(BaseState):
     def __init__(self):
         super().__init__()
         self.next_state = "ARCADE"
+        
+        # --- Carga de Assets ---
         self.sonido_disparo = pygame.mixer.Sound(settings.resource_path('sounds/space_shot.mp3'))
         self.sonido_disparo.set_volume(0.1)
         self.sonido_enemigo_abatido = pygame.mixer.Sound(settings.resource_path("sounds/enemy_down.ogg"))
         self.sonido_nave_exp = pygame.mixer.Sound(settings.resource_path('sounds/explosion_nave.wav'))
+        
         self.music_path = settings.resource_path('sounds/fondo_space.ogg')
+        
         self.imagenes_enemigos = [
             pygame.image.load(settings.resource_path("images/green.png")).convert_alpha(),
             pygame.image.load(settings.resource_path("images/red.png")).convert_alpha(),
             pygame.image.load(settings.resource_path("images/yellow.png")).convert_alpha()
         ]
+        
         sprite_sheet = pygame.image.load(settings.resource_path('images/nave_sheet.png')).convert_alpha()
         nave_cenital = pygame.transform.scale(sprite_sheet.subsurface((0, 0, 512, 512)), (80, 80))
         nave_derecha = pygame.transform.scale(sprite_sheet.subsurface((512, 0, 512, 512)), (90, 90))
         nave_izquierda = pygame.transform.scale(sprite_sheet.subsurface((1024, 0, 512, 512)), (90, 90))
         self.nave_template = Nave(nave_cenital, nave_izquierda, nave_derecha)
+        
         self.imagenes_explosion = [pygame.transform.scale(pygame.image.load(settings.resource_path(f'images/explosion{i}.png')).convert_alpha(), (120, 120)) for i in range(1, 4)]
+
         self.font = pygame.font.Font(None, 60)
         self.game_over_font = pygame.font.Font(None, 80)
 
     def startup(self, persistent):
         super().startup(persistent)
         self.nave_group = pygame.sprite.GroupSingle()
-        self.disparos_jugador = pygame.sprite.Group() # Renombrado para claridad
-        self.disparos_enemigos = pygame.sprite.Group() # <-- NUEVO GRUPO
+        self.disparos_jugador = pygame.sprite.Group()
+        self.disparos_enemigos = pygame.sprite.Group()
         self.enemigos = pygame.sprite.Group()
         self.explosiones = pygame.sprite.Group()
+        
         self.estrellas_fondo = [Estrella(speed=50) for _ in range(50)]
         self.estrellas_medias = [Estrella(speed=150) for _ in range(30)]
         self.asteroides = pygame.sprite.Group()
         self.asteroide_spawn_timer = 0
         self.asteroide_spawn_interval = 1.0
+        
         self.nave = self.nave_template
         self.nave.rect.centerx = settings.SCREEN_WIDTH / 2
         self.nave.rect.bottom = settings.SCREEN_HEIGHT - 20
+        self.nave.speed = 0
         self.nave_group.add(self.nave)
+        
         self.score = 0
         self.game_over = False
         self.direccion_enemigos = 1
         self.velocidad_enemigos = 120
+        
         self.crear_oleada()
         pygame.mixer.music.load(self.music_path)
         pygame.mixer.music.set_volume(0.25)
@@ -56,6 +70,7 @@ class SpaceInvadersState(BaseState):
         if event.type == pygame.QUIT: self.quit = True
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE: self.done = True
+            
             if not self.game_over and event.key == pygame.K_SPACE:
                 if len(self.disparos_jugador) < 6:
                     d1 = Disparo(self.nave.rect.left + 15, self.nave.rect.top)
@@ -78,7 +93,6 @@ class SpaceInvadersState(BaseState):
         for estrella in self.estrellas_medias: estrella.update(dt)
         self.asteroides.update(dt); self.nave_group.update(dt); self.disparos_jugador.update(dt); self.disparos_enemigos.update(dt)
         
-        # Spawning de asteroides
         self.asteroide_spawn_timer += dt
         if self.asteroide_spawn_timer >= self.asteroide_spawn_interval:
             self.asteroides.add(Asteroide()); self.asteroide_spawn_timer = 0
@@ -94,13 +108,11 @@ class SpaceInvadersState(BaseState):
             if disparo_nuevo:
                 self.disparos_enemigos.add(disparo_nuevo)
         
-        # Colisiones
         hits = pygame.sprite.groupcollide(self.disparos_jugador, self.enemigos, True, True)
         if hits:
             self.score += len(hits)
             self.sonido_enemigo_abatido.play()
 
-        # --- NUEVO: Colisión de disparos enemigos con el jugador ---
         if pygame.sprite.spritecollide(self.nave, self.disparos_enemigos, True):
             self.trigger_game_over()
             
@@ -118,7 +130,7 @@ class SpaceInvadersState(BaseState):
         self.asteroides.draw(surface)
         self.nave_group.draw(surface)
         self.disparos_jugador.draw(surface)
-        self.disparos_enemigos.draw(surface) # <-- Dibujamos los disparos enemigos
+        self.disparos_enemigos.draw(surface)
         self.enemigos.draw(surface)
         self.explosiones.draw(surface)
         score_text = self.font.render(f"Puntaje: {self.score}", True, settings.WHITE)
@@ -126,7 +138,6 @@ class SpaceInvadersState(BaseState):
         if self.game_over and not self.explosiones:
             game_over_text = self.game_over_font.render("GAME OVER", True, "red")
             surface.blit(game_over_text, game_over_text.get_rect(center=(settings.SCREEN_WIDTH/2, settings.SCREEN_HEIGHT/2)))
-
 
     def crear_oleada(self):
         imagen_oleada = random.choice(self.imagenes_enemigos)
@@ -140,12 +151,22 @@ class SpaceInvadersState(BaseState):
     def trigger_game_over(self):
         if not self.game_over:
             self.game_over = True
-            save_manager.save_high_score("SF", self.score)
             self.sonido_nave_exp.play()
             pygame.mixer.music.stop()
             explosion = Explosion(self.nave.rect.center, self.imagenes_explosion)
             self.explosiones.add(explosion)
             self.nave.kill()
+
+            # --- 2. LÓGICA DE GUARDADO CORREGIDA ---
+            data = save_manager.load_data()
+            
+            # Guardamos el récord de Space Fighter
+            record_actual = data.get('high_score_SF', 0)
+            if self.score > record_actual:
+                data['high_score_SF'] = self.score
+                print(f"¡Nuevo Récord en Space Invaders: {self.score}!")
+            
+            save_manager.save_data(data)
             
     def cleanup(self):
         pygame.mixer.music.stop()
