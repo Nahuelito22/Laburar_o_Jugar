@@ -33,24 +33,11 @@ class App:
             'PRE_GAME_MENU': PreGameMenuState,
         }
         self.state_name = 'MENU'
+        # Creamos la PRIMERA instancia del estado inicial
         self.current_state = self.state_classes[self.state_name]()
         self.current_state.startup({})
 
-    def run(self):
-        while not self.current_state.quit:
-            dt = self.clock.tick(settings.FPS) / 1000.0
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    self.current_state.quit = True
-                self.current_state.get_event(event)
-
-            self.current_state.update(dt)
-            self.current_state.draw(self.screen)
-            pygame.display.flip()
-
-            if self.current_state.done:
-                self.flip_state()
-        pygame.quit()
+    # --- ELIMINAMOS EL MÉTODO run() DE AQUÍ ---
 
     def flip_state(self):
         previous_state_name = self.state_name
